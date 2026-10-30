@@ -351,18 +351,15 @@ function icon(k,size=32){const id=k+size;if(iconCache[id])return iconCache[id];
 
 /* ---------- 데이터 ---------- */
 const CLASSES={
-  warrior:{n:'전사',hp:200,spd:160,w:'sword',pass:'받는 피해 -10%',d:'대검으로 앞쪽을 베고 검기를 날린다'},
-  archer:{n:'궁수',hp:160,spd:190,w:'bow',pass:'화살 관통 +1',d:'멀리서 꿰뚫는 화살을 쏜다'},
-  mage:{n:'불마법사',hp:120,spd:160,w:'staff',pass:'화염구 폭발 범위 +40%',d:'맞으면 터지는 화염구를 던진다'},
-  rogue:{n:'도적',hp:105,spd:192,w:'daggers',pass:'치명타 확률 +20%',d:'가까운 적들에게 단검을 던진다'},
+  warrior:{n:'전사',hp:200,spd:160,w:'sword',wn:'대검',pass:'받는 피해 -10%',d:'대검으로 앞쪽을 베고 검기를 날린다'},
+  archer:{n:'궁수',hp:160,spd:190,w:'bow',wn:'장궁',pass:'화살 관통 +1',d:'멀리서 꿰뚫는 화살을 쏜다'},
+  mage:{n:'불마법사',hp:120,spd:160,w:'staff',wn:'화염 지팡이',pass:'화염구 폭발 범위 +40%',d:'맞으면 터지는 화염구를 던진다'},
+  rogue:{n:'도적',hp:105,spd:192,w:'daggers',wn:'쌍단검',pass:'치명타 확률 +20%',d:'가까운 적들에게 단검을 던진다'},
 };
 const SLOTS=['weapon','armor','neck','gloves','belt','boots','lantern'];
 const SLOTN={weapon:'무기',armor:'갑옷',neck:'목걸이',gloves:'장갑',belt:'허리띠',boots:'신발',lantern:'등불'};
 const GEAR={
-  sword:{n:'대검',slot:'weapon',cls:'warrior',st:'atk',v:10},
-  bow:{n:'장궁',slot:'weapon',cls:'archer',st:'atk',v:10},
-  staff:{n:'화염 지팡이',slot:'weapon',cls:'mage',st:'atk',v:10},
-  daggers:{n:'쌍단검',slot:'weapon',cls:'rogue',st:'atk',v:10},
+  weapon:{n:'룬 무기',slot:'weapon',st:'atk',v:10},   // v10: 모든 직업 공통(모양·공격 방식은 직업을 따름)
   armor:{n:'사슬 갑옷',slot:'armor',st:'hp',v:40},
   neck:{n:'수정 목걸이',slot:'neck',st:'atk',v:5},
   gloves:{n:'가죽 장갑',slot:'gloves',st:'crit',v:3},
@@ -422,20 +419,24 @@ function newItem(k,g){return{id:(++iid)+'_'+Date.now().toString(36)+Math.random(
 // v8 로비 메타: 에너지·일일 퀘스트·업적·출석·재능·누적 기록
 const metaSave=()=>({energy:{n:20,t:Date.now()},daily:{day:'',q:[],p:{},got:[],act:0,box:[]},ach:{},att:{n:0,last:'',shown:''},tal:{lv:{},n:0},st:{}});
 function freshSave(){
-  const items=['sword','bow','staff','daggers','armor'].map(k=>newItem(k,0));
-  return{gold:600,gems:120,items,eq:{weapon:{warrior:items[0].id,archer:items[1].id,mage:items[2].id,rogue:items[3].id},armor:items[4].id,neck:null,gloves:null,belt:null,boots:null,lantern:null},cls:'warrior',ch:1,maxCh:1,best:{},free:'',...metaSave()};
+  const items=['weapon','armor'].map(k=>newItem(k,0));
+  return{gold:600,gems:120,items,eq:{weapon:items[0].id,armor:items[1].id,neck:null,gloves:null,belt:null,boots:null,lantern:null},cls:'warrior',ch:1,maxCh:1,best:{},free:'',...metaSave()};
 }
-function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&s.items){const d=metaSave();for(const k in d)if(!s[k])s[k]=d[k];return s}}catch(_){}return freshSave()}
+function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&s.items){const d=metaSave();for(const k in d)if(!s[k])s[k]=d[k];
+  if(s.eq.weapon&&typeof s.eq.weapon==='object'){   // v10 이전 직업별 무기 4종 → 룬 무기(등급·레벨 유지), 가장 좋은 것 장착
+    for(const it of s.items)if(['sword','bow','staff','daggers'].includes(it.k))it.k='weapon';
+    const w=s.items.filter(i=>i.k==='weapon').sort((a,b)=>b.g-a.g||b.lv-a.lv)[0];s.eq.weapon=w?w.id:null}
+  return s}}catch(_){}return freshSave()}
 let SV=loadSave();
 function persist(){if(BOT)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(SV))}catch(_){}}
 const itemById=(id,sv=SV)=>id?sv.items.find(i=>i.id===id):null;
 function itemVal(it){const d=GEAR[it.k],lk=d.st==='atk'||d.st==='hp'?.1:.03;return d.v*GRADES[it.g].m*(1+lk*(it.lv-1))}
 const fmtVal=(st,v)=>st==='atk'||st==='hp'?Math.round(v):v.toFixed(1);
-const equippedId=(slot,cls,sv=SV)=>slot==='weapon'?sv.eq.weapon[cls]:sv.eq[slot];
+const gearIc=k=>k==='weapon'?CLASSES[SV.cls].w:k;   // 룬 무기 그림 = 지금 직업의 무기
 function gearStats(cls,sv=SV){
   const s={atk:10,hp:0,spd:0,crit:0,aspd:1,extra:0,tray:0,dr:0,light:0,mapR:1,mapEl:0};
   for(const slot of SLOTS){
-    const it=itemById(equippedId(slot,cls,sv),sv);if(!it)continue;
+    const it=itemById(sv.eq[slot],sv);if(!it)continue;
     s[GEAR[it.k].st]+=itemVal(it);
     if(slot==='weapon'){if(it.g>=2)s.aspd=.85;if(it.g>=4)s.extra=1}
     if(slot==='belt')s.tray=[1,1,2,2,3][it.g];
@@ -446,7 +447,7 @@ function gearStats(cls,sv=SV){
   s.atk+=1.5*(T.atk||0);s.hp+=12*(T.hp||0);s.dr+=.01*(T.dr||0);s.spd+=T.spd||0;s.crit+=.8*(T.crit||0);s.light+=2*(T.light||0);s.rec=.015*(T.rec||0);s.goldT=.04*(T.gold||0);
   return s;
 }
-const isEquipped=it=>Object.values(SV.eq.weapon).includes(it.id)||SLOTS.some(s=>s!=='weapon'&&SV.eq[s]===it.id);
+const isEquipped=it=>SLOTS.some(s=>SV.eq[s]===it.id);
 const upCost=it=>40*it.lv;
 function rollGear(table){let r=Math.random(),g=0;for(;g<4;g++){r-=table[g];if(r<0)break}return newItem(pick(Object.keys(GEAR)),g)}
 const T_N=[.7,.25,.05,0,0],T_P=[0,.55,.33,.1,.02];
@@ -478,8 +479,8 @@ function renderRun(){
     const c=document.createElement('canvas');c.width=c.height=52;if(ARTOK){const g=c.getContext('2d');g.imageSmoothingEnabled=false;drawA(g,k,26,51)}
     b.appendChild(c);b.insertAdjacentHTML('beforeend',CLASSES[k].n);b.onclick=()=>{SV.cls=k;persist();renderRun()};row.appendChild(b);
   }
-  const C=CLASSES[SV.cls],gs=gearStats(SV.cls),wp=itemById(SV.eq.weapon[SV.cls]);
-  $('#clsinfo').innerHTML=`<b>${C.n}</b> · ${C.d}<br>고유 능력: ${C.pass}<br>무기: <span style="color:${wp?GRADES[wp.g].c:'#888'}">${wp?`${GRADES[wp.g].n} ${GEAR[wp.k].n} Lv${wp.lv}`:'없음'}</span> · 공격력 ${Math.round(gs.atk)} · 생명력 ${Math.round(C.hp+gs.hp)}`;
+  const C=CLASSES[SV.cls],gs=gearStats(SV.cls),wp=itemById(SV.eq.weapon);
+  $('#clsinfo').innerHTML=`<b>${C.n}</b> · ${C.d}<br>고유 능력: ${C.pass}<br>무기: <span style="color:${wp?GRADES[wp.g].c:'#888'}">${wp?`${GRADES[wp.g].n} ${GEAR[wp.k].n}(${C.wn}) Lv${wp.lv}`:'없음'}</span> · 공격력 ${Math.round(gs.atk)} · 생명력 ${Math.round(C.hp+gs.hp)}`;
   $('#chT').innerHTML=`챕터 ${SV.ch} · <span class="d${Math.min(2,SV.ch-1)}">${DIFF[SV.ch-1]||'지옥 +'+(SV.ch-3)}</span>`;$('#chD').textContent=`3지역 · 적 체력 ×${(1+1.3*(SV.ch-1)).toFixed(1)} · 보상 ×${SV.ch}${SV.ch===SV.maxCh?' · 첫 클리어 보석 100':''}`;
   $('#chPrev').disabled=SV.ch<=1;$('#chNext').disabled=SV.ch>=SV.maxCh;
   const b=SV.best[SV.ch];$('#best').textContent=b?`챕터 ${SV.ch} 최고 기록 · ${b.win?'클리어 · ':b.a?`지역 ${b.a} · `:''}${fmt(b.t)} · 처치 ${n0(b.k)}`:`챕터 ${SV.ch} 기록 없음`;
@@ -622,7 +623,7 @@ $('#chPrev').onclick=()=>{SV.ch=Math.max(1,SV.ch-1);persist();renderRun()};
 $('#chNext').onclick=()=>{SV.ch=Math.min(SV.maxCh,SV.ch+1);persist();renderRun()};
 function slotHtml(it,label,extra='',size=36){
   if(!it)return`<div class="sl">${label}</div>`;
-  return`${label?`<div class="sl">${label}</div>`:''}<img src="${icon(it.k,size)}" alt=""><div class="lv" style="color:${GRADES[it.g].c}">Lv${it.lv}</div>${extra}`;
+  return`${label?`<div class="sl">${label}</div>`:''}<img src="${icon(gearIc(it.k),size)}" alt=""><div class="lv" style="color:${GRADES[it.g].c}">Lv${it.lv}</div>${extra}`;
 }
 function renderGear(){
   const cls=SV.cls,gs=gearStats(cls),C=CLASSES[cls];
@@ -630,7 +631,7 @@ function renderGear(){
   $('#gstat').innerHTML=[[Math.round(gs.atk),'공격력'],[Math.round(C.hp+gs.hp),'생명력'],[gs.crit.toFixed(1)+'%','치명타'],['+'+gs.spd.toFixed(1)+'%','이동 속도'],[gs.aspd<1?'+15%':'-','공격 속도'],['+'+gs.light.toFixed(1)+'%','시야'],[Math.round((gs.dr+(cls==='warrior'?.1:0))*100)+'%','피해 감소'],[(1+gs.tray)+'칸','예비 보관함']].map(([v,n])=>`<div><b>${v}</b><span>${n}</span></div>`).join('');
   const dl=$('#dollL'),dr=$('#dollR'),dc=$('#dollC');dl.innerHTML=dr.innerHTML=dc.innerHTML='';
   for(const slot of SLOTS){
-    const it=itemById(equippedId(slot,cls)),b=document.createElement('button');b.className='slot';
+    const it=itemById(SV.eq[slot]),b=document.createElement('button');b.className='slot';
     if(it)b.style.setProperty('--gc',GRADES[it.g].c);
     b.innerHTML=it?slotHtml(it,'','',72):`<div class="sl">${SLOTN[slot]}</div><img class="ghost" src="${icon(slot==='weapon'?C.w:slot,72)}" alt="">`;
     b.onclick=()=>it&&openItem(it);(slot==='lantern'?dc:['weapon','armor','gloves'].includes(slot)?dl:dr).appendChild(b);
@@ -653,12 +654,12 @@ function drawDoll(cls){
 function openItem(it){
   const d=GEAR[it.k],G_=GRADES[it.g],on=isEquipped(it),same=SV.items.filter(i=>i.k===it.k&&i.g===it.g).length,cost=upCost(it),max=it.lv>=G_.max;
   const perks=(PERKS[d.slot]||[]).map(([g,t])=>`<div class="${it.g>=g?'':'lock'}">${GRADES[g].n}: ${t}</div>`).join('');
-  $('#itemPanel').innerHTML=`<div class="idet"><div class="slot" style="--gc:${G_.c}"><img src="${icon(it.k,72)}" alt=""></div><div><div class="n" style="color:${G_.c}">${G_.n} ${d.n}</div><div class="note" style="text-align:left">${d.cls?CLASSES[d.cls].n+' 전용 · ':''}${SLOTN[d.slot]} · Lv ${it.lv} / ${G_.max}</div><div>${STN[d.st]} +${fmtVal(d.st,itemVal(it))}${STU[d.st]}</div>${d.st==='light'?`<div class="note" style="text-align:left">빛 안에 들어온 적은 ${Math.round((1-LIT_SLOW)*100)}% 느려진다 · 시야가 넓을수록 일찍</div>`:''}</div></div>
+  $('#itemPanel').innerHTML=`<div class="idet"><div class="slot" style="--gc:${G_.c}"><img src="${icon(gearIc(it.k),72)}" alt=""></div><div><div class="n" style="color:${G_.c}">${G_.n} ${d.n}</div><div class="note" style="text-align:left">${d.slot==='weapon'?`모든 직업 공통 <span style="white-space:nowrap">(${CLASSES[SV.cls].n} → ${CLASSES[SV.cls].wn})</span><br>`:''}${SLOTN[d.slot]} · Lv ${it.lv} / ${G_.max}</div><div>${STN[d.st]} +${fmtVal(d.st,itemVal(it))}${STU[d.st]}</div>${d.st==='light'?`<div class="note" style="text-align:left">빛 안에 들어온 적은 ${Math.round((1-LIT_SLOW)*100)}% 느려진다 · 시야가 넓을수록 일찍</div>`:''}</div></div>
     ${perks?`<div class="perk">${perks}</div>`:''}
     <div class="row"><button class="sbtn blue" id="iEq">${on?'장착 중':'장착'}</button><button class="sbtn green" id="iUp">${max?'최대 레벨':`강화 · 금화 ${n0(cost)}`}</button></div>
     <div class="row"><button class="sbtn" id="iMerge">합성 (${same}/3)</button><button class="sbtn" id="iClose">닫기</button></div>`;
   $('#iEq').disabled=on;$('#iUp').disabled=max||SV.gold<cost;$('#iMerge').disabled=same<3||it.g>=4;
-  $('#iEq').onclick=()=>{if(d.slot==='weapon'){SV.eq.weapon[d.cls]=it.id;SV.cls=d.cls}else SV.eq[d.slot]=it.id;persist();sfx('place');openItem(it);renderLobby()};
+  $('#iEq').onclick=()=>{SV.eq[d.slot]=it.id;persist();sfx('place');openItem(it);renderLobby()};
   $('#iUp').onclick=()=>{SV.gold-=cost;it.lv++;track('up');persist();sfx('buy');openItem(it);renderLobby()};
   $('#iMerge').onclick=()=>{const r=mergeOnce(it);persist();sfx('chest');if(r)openItem(r);renderLobby()};
   $('#iClose').onclick=()=>{$('#itemOv').hidden=true};
@@ -1674,7 +1675,7 @@ if(BOT){
   window.__sim={
     start(cls,ch=1,g=0,lv=1,tal=0){
       const sv=freshSave();for(let i=0;i<tal;i++){const t=TAL[i%TAL.length];sv.tal.lv[t.k]=(sv.tal.lv[t.k]||0)+1;sv.tal.n++}
-      if(g||lv>1){sv.items=[];for(const k of Object.keys(GEAR)){const it=newItem(k,g);it.lv=lv;sv.items.push(it);if(GEAR[k].slot==='weapon')sv.eq.weapon[GEAR[k].cls]=it.id;else sv.eq[GEAR[k].slot]=it.id}}
+      if(g||lv>1){sv.items=[];for(const k of Object.keys(GEAR)){const it=newItem(k,g);it.lv=lv;sv.items.push(it);sv.eq[GEAR[k].slot]=it.id}}
       newRun(cls||pick(Object.keys(CLASSES)),ch,sv);
     },
     run(sec){const e=G.t+sec;while(G.t<e&&!G.over)step(1/30);return{cls:G.cls,area:G.area,areaT:G.areaT,bossTs:G.bossTs,ak:G.ak,oil:G.oil,light:+G.lightM.toFixed(2),t:Math.round(G.t),lv:G.lv,kills:G.kills,hp:Math.round(G.p.hp),over:G.over,win:G.win,sk:G.sk,line:G.li.same,full:G.li.full,dl:G.dl,merges:G.merges,melts:G.melts,awk:Object.keys(G.awk),gold:G.runGold,cells:gridCols().filter(Boolean).length,rainbow:G.li.rainbow,gob:[G.gobN||0,G.gobK||0],brs:G.map.path.brs.length,bossPs:G.bossPs||[],brS:G.map.path.brs.map(b=>Math.round(b.s)),ins:{lines:G.ins.lines,cells:G.ins.cells,full:G.ins.full,same:G.ins.same}}}
