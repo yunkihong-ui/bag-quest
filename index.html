@@ -219,9 +219,9 @@ h3{font-size:15px;color:var(--dim)}
     <section class="tab" id="t-shop" hidden>
       <h2>상점</h2>
       <div class="shopc pp"><img id="imgC1" alt=""><div><div class="n">매일 무료 상자</div><div class="d">하루 한 번 · 일반 70% · 우수 25% · 희귀 5%</div><button class="pbtn" id="buyFree">무료로 열기</button></div></div>
-      <div class="shopc pp"><img id="imgC2" alt=""><div><div class="n">나무 상자</div><div class="d">일반 70% · 우수 25% · 희귀 5%</div><button class="pbtn" id="buyN" aria-label="금화 300">금화 300</button></div></div>
-      <div class="shopc pp"><img id="imgC3" alt=""><div><div class="n">황금 상자</div><div class="d">우수 55% · 희귀 33% · 영웅 10% · 전설 2%</div><button class="pbtn" id="buyP" aria-label="보석 60">보석 60</button></div></div>
-      <div class="shopc pp"><img id="imgC4" alt=""><div><div class="n">황금 상자 10개</div><div class="d">10개 중 1개는 희귀 이상 확정</div><button class="pbtn" id="buyP10" aria-label="보석 540">보석 540</button></div></div>
+      <div class="shopc pp"><img id="imgC2" alt=""><div><div class="n">나무 상자</div><div class="d">하루 한 번 · 일반 70% · 우수 25% · 희귀 5%</div><button class="pbtn" id="buyN" aria-label="금화 300">금화 300</button></div></div>
+      <div class="shopc pp"><img id="imgC3" alt=""><div><div class="n">황금 상자</div><div class="d">우수 55% · 희귀 33% · 영웅 10% · 전설 2%</div><button class="pbtn" id="buyP" aria-label="보석 150">보석 150</button></div></div>
+      <div class="shopc pp"><img id="imgC4" alt=""><div><div class="n">황금 상자 10개</div><div class="d">10개 중 1개는 희귀 이상 확정</div><button class="pbtn" id="buyP10" aria-label="보석 1,350">보석 1,350</button></div></div>
       <p class="note">실제 결제 없음. 금화와 보석은 원정 보상으로 얻는다. 진행 상황은 이 기기 브라우저에만 저장된다.</p>
     </section>
     <section class="tab" id="t-tal" hidden>
@@ -352,7 +352,7 @@ function icon(k,size=32){const id=k+size;if(iconCache[id])return iconCache[id];
 /* ---------- 데이터 ---------- */
 const CLASSES={
   warrior:{n:'전사',hp:200,spd:160,w:'sword',wn:'대검',pass:'받는 피해 -10%',d:'대검으로 앞쪽을 베고 검기를 날린다'},
-  archer:{n:'궁수',hp:160,spd:190,w:'bow',wn:'장궁',pass:'화살 관통 +1',d:'멀리서 꿰뚫는 화살을 쏜다'},
+  archer:{n:'궁수',hp:160,spd:190,w:'bow',wn:'장궁',pass:'화살 2발 · 관통 4',d:'멀리서 꿰뚫는 화살을 쏜다'},
   mage:{n:'불마법사',hp:120,spd:160,w:'staff',wn:'화염 지팡이',pass:'화염구 폭발 범위 +40%',d:'맞으면 터지는 화염구를 던진다'},
   rogue:{n:'도적',hp:105,spd:192,w:'daggers',wn:'쌍단검',pass:'치명타 확률 +20%',d:'가까운 적들에게 단검을 던진다'},
 };
@@ -385,7 +385,11 @@ const AWK={fire:'메테오',ice:'얼음 구체',bolt:'번개 폭풍',poison:'시
 const AWKD={fire:'3초마다 큰 운석이 떨어진다',ice:'느린 얼음 구체가 관통하며 얼린다',bolt:'1.2초마다 낙뢰 3발',poison:'중독된 적이 죽으면 폭발하며 독을 퍼뜨린다',steel:'칼날 반경 1.6배 · 칼날 +3개',holy:'2초마다 빛의 기둥 2발 · 생명력 회복'};
 const UQ={anni:{n:'멸절의 룬',sh:'1',d:'모든 기술 Lv +1'},torch:{n:'지옥불 횃불',sh:'I2',d:'친화 색 기술 Lv +6'},greed:{n:'탐욕의 행운',sh:'I3',d:'경험치 +30% · 금화 +50%'},slime:{n:'왕의 점액',sh:'I2',d:'룬어 판정에서 어느 색으로도 인정'}};
 const RW=[1.4,1.7,2,2];   // 칸당 기술 레벨(일반·마법·희귀·고유). v11: 룬은 적게·하나는 강하게(이전 1·1.25·1.5·1.5)
-const DIFF=['보통','악몽','지옥'];
+const DIFF=['보통','악몽','지옥'];   // 챕터 1~5 보통 · 6~10 악몽 · 11~15 지옥
+// v12 챕터 15개(15 = 최종). 적 체력·공격 배율: 챕터 1은 초보 보호, 뒤로 갈수록 곱절 — 챕터 15는 전설 풀세트 수준
+const MAXCH=15,CH_HP=[0.7,0.8,2.3,6.7,11,16,21,32,41,47,54,61,68,76,97],CH_DM=[0.7,0.8,1.9,4.4,6.7,8.6,11,15,19,21,23,25,28,30,37];
+// v12 원정 보상: 금화는 챕터당 +GOLD_CH(이전 ×챕터), 일반 클리어 보석 없음(이전 30×챕터), 첫 클리어 = 보석(황금 상자 없음), 클리어 장비 = WIN_N 확률로 나무 상자(이전 매번 황금 상자)
+const GOLD_CH=0.15,FIRST_GEM=50,WIN_N=0.25,KILL_G=0.2,TIME_G=0.5;   // 금화 = (처치×KILL_G + 시간(초)×TIME_G + 클리어 300) × (1 + GOLD_CH×(챕터-1))
 const LINE={fire:'화염구 +1발 · 폭발 범위 +40% · 화상',ice:'적중 시 20% 확률 빙결',bolt:'연쇄 +2 · 번개 피해 +25%',poison:'독 늪 +1개 · 독 피해 +25%',steel:'칼날 +2개 · 칼날 피해 +25%',holy:'망치 +1개 · 초당 생명력 +1.5'};
 const GRID=6;
 // 룬 모양 1~5칸 21종(회전만, 뒤집기 없음). w = 출현 가중(합 100): 1칸 12 · 2칸 22 · 3칸 26 · 4칸 24 · 5칸 16(v11: 큰 모양 비중 ↑, 이전 30·28·20·14·8), 같은 크기끼리 나눔
@@ -426,6 +430,7 @@ function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&
   if(s.eq.weapon&&typeof s.eq.weapon==='object'){   // v10 이전 직업별 무기 4종 → 룬 무기(등급·레벨 유지), 가장 좋은 것 장착
     for(const it of s.items)if(['sword','bow','staff','daggers'].includes(it.k))it.k='weapon';
     const w=s.items.filter(i=>i.k==='weapon').sort((a,b)=>b.g-a.g||b.lv-a.lv)[0];s.eq.weapon=w?w.id:null}
+  s.maxCh=Math.min(s.maxCh||1,MAXCH);s.ch=Math.min(s.ch||1,s.maxCh);   // v12 챕터 15개
   return s}}catch(_){}return freshSave()}
 let SV=loadSave();
 function persist(){if(BOT)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(SV))}catch(_){}}
@@ -448,7 +453,7 @@ function gearStats(cls,sv=SV){
   return s;
 }
 const isEquipped=it=>SLOTS.some(s=>SV.eq[s]===it.id);
-const upCost=it=>40*it.lv;
+const upCost=it=>Math.round(40*it.lv*(1+it.lv/10));   // v12: 레벨이 오를수록 가파르게(이전 40×레벨)
 function rollGear(table){let r=Math.random(),g=0;for(;g<4;g++){r-=table[g];if(r<0)break}return newItem(pick(Object.keys(GEAR)),g)}
 const T_N=[.7,.25,.05,0,0],T_P=[0,.55,.33,.1,.02];
 function mergeOnce(it){
@@ -481,7 +486,7 @@ function renderRun(){
   }
   const C=CLASSES[SV.cls],gs=gearStats(SV.cls),wp=itemById(SV.eq.weapon);
   $('#clsinfo').innerHTML=`<b>${C.n}</b> · ${C.d}<br>고유 능력: ${C.pass}<br>무기: <span style="color:${wp?GRADES[wp.g].c:'#888'}">${wp?`${GRADES[wp.g].n} ${GEAR[wp.k].n}(${C.wn}) Lv${wp.lv}`:'없음'}</span> · 공격력 ${Math.round(gs.atk)} · 생명력 ${Math.round(C.hp+gs.hp)}`;
-  $('#chT').innerHTML=`챕터 ${SV.ch} · <span class="d${Math.min(2,SV.ch-1)}">${DIFF[SV.ch-1]||'지옥 +'+(SV.ch-3)}</span>`;$('#chD').textContent=`3지역 · 적 체력 ×${(1+1.3*(SV.ch-1)).toFixed(1)} · 보상 ×${SV.ch}${SV.ch===SV.maxCh?' · 첫 클리어 보석 100':''}`;
+  const dB=Math.min(2,(SV.ch-1)/5|0),cleared=SV.best[SV.ch]&&SV.best[SV.ch].win;$('#chT').innerHTML=`챕터 ${SV.ch}${SV.ch===MAXCH?' · 최종':''} · <span class="d${dB}">${DIFF[dB]}</span>`;$('#chD').textContent=`3지역 · 적 체력 ×${CH_HP[SV.ch-1]} · 공격 ×${CH_DM[SV.ch-1]}${cleared?' · 클리어함':` · 첫 클리어 보석 ${FIRST_GEM}`}`;
   $('#chPrev').disabled=SV.ch<=1;$('#chNext').disabled=SV.ch>=SV.maxCh;
   const b=SV.best[SV.ch];$('#best').textContent=b?`챕터 ${SV.ch} 최고 기록 · ${b.win?'클리어 · ':b.a?`지역 ${b.a} · `:''}${fmt(b.t)} · 처치 ${n0(b.k)}`:`챕터 ${SV.ch} 기록 없음`;
 }
@@ -555,10 +560,10 @@ const rTxt=r=>[r.gold&&`금화 ${n0(r.gold)}`,r.gems&&`보석 ${r.gems}`,r.energ
 function openMeta(title,html){$('#metaT').textContent=title;$('#metaB').innerHTML=html;$('#metaOv').hidden=false}
 $('#metaOk').onclick=()=>{$('#metaOv').hidden=true;renderLobby()};
 // 일일 퀘스트: 날짜 고정 무작위 5개, 하나당 활동 점수 20 → 활동 상자 20·40·60·80·100
-const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:12,n:'룬 줄 지우기',r:{gems:10}},{k:'boss',g:3,n:'보스 처치',r:{gems:10}},
-  {k:'gob',g:1,n:'보물 고블린 처치',r:{gold:500}},{k:'area3',g:1,n:'지역 3 도달',r:{gems:10}},{k:'up',g:2,n:'장비 강화',r:{gold:300}},{k:'chest',g:1,n:'상점 상자 열기',r:{gold:200}},
-  {k:'elite',g:5,n:'정예 처치',r:{gold:300}},{k:'shrine',g:3,n:'성소 사용',r:{gold:300}},{k:'awk',g:1,n:'각성',r:{gems:10}}];
-const QPTS=20,QBOX=[[20,{gold:500}],[40,{energy:10}],[60,{gems:20}],[80,{chest:'N'}],[100,{gems:50}]];
+const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:12,n:'룬 줄 지우기',r:{gems:5}},{k:'boss',g:3,n:'보스 처치',r:{gems:5}},
+  {k:'gob',g:1,n:'보물 고블린 처치',r:{gold:500}},{k:'area3',g:1,n:'지역 3 도달',r:{gems:5}},{k:'up',g:2,n:'장비 강화',r:{gold:300}},{k:'chest',g:1,n:'상점 상자 열기',r:{gold:200}},
+  {k:'elite',g:5,n:'정예 처치',r:{gold:300}},{k:'shrine',g:3,n:'성소 사용',r:{gold:300}},{k:'awk',g:1,n:'각성',r:{gems:5}}];
+const QPTS=20,QBOX=[[20,{gold:500}],[40,{energy:10}],[60,{gems:10}],[80,{chest:'N'}],[100,{gems:20}]];
 function dailyTick(){
   const d=SV.daily,t=today();if(d.day===t&&d.q.length)return;
   let h=7;for(const c of t)h=(h*31+c.charCodeAt(0))>>>0;const rnd=()=>(h=(Math.imul(h,1103515245)+12345)>>>0)/4294967296;
@@ -580,9 +585,9 @@ function openQuest(){
 }
 // 업적: 누적 기록 단계형, 단계마다 보석
 const ACH=[{id:'runs',n:'원정 횟수',t:[5,20,50,100]},{id:'kills',n:'누적 처치',t:[2000,10000,50000,200000]},{id:'wins',n:'원정 성공',t:[1,5,20,50]},{id:'lines',n:'룬 줄 지우기',t:[40,250,1200,4000]},
-  {id:'gob',n:'보물 고블린 처치',t:[5,25,100,300]},{id:'boss',n:'보스 처치',t:[10,50,200,600]},{id:'awk',n:'각성',t:[5,30,100,300]},{id:'ch',n:'챕터 열기',t:[2,3,4,5],v:()=>SV.maxCh,f:v=>`챕터 ${v}`},
+  {id:'gob',n:'보물 고블린 처치',t:[5,25,100,300]},{id:'boss',n:'보스 처치',t:[10,50,200,600]},{id:'awk',n:'각성',t:[5,30,100,300]},{id:'ch',n:'챕터 열기',t:[3,6,10,15],v:()=>SV.maxCh,f:v=>`챕터 ${v}`},
   {id:'grade',n:'장비 등급',t:[1,2,3,4],v:()=>Math.max(0,...SV.items.map(i=>i.g)),f:v=>`${GRADES[v].n} 장비`},{id:'tal',n:'재능 강화',t:[5,20,50,80],v:()=>SV.tal.n}];
-const ACH_R=[20,40,80,150];
+const ACH_R=[10,20,40,80];
 const achVal=a=>a.v?a.v():SV.st[a.id]||0,achT=a=>SV.ach[a.id]||0,achCan=a=>achT(a)<a.t.length&&achVal(a)>=a.t[achT(a)];
 const achReadyN=()=>ACH.filter(achCan).length;
 function openAch(){
@@ -677,19 +682,20 @@ $('#mergeAll').onclick=()=>{
   persist();sfx(n?'chest':'place');renderLobby();popup('일괄 합성',[],n?`${n}번 합성했다`:'합성할 장비가 없다 · 같은 등급의 같은 장비 3개가 필요하다');
 };
 const today=()=>{const d=new Date();return`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`};
+const NLIM=1,PP=150,nBuy=()=>SV.nb&&SV.nb.d===today()?SV.nb.n:0;   // v12: 나무 상자(금화) 하루 NLIM번, 황금 상자 보석 PP(10개 = 9배)
 function renderShop(){
   const used=SV.free===today();$('#buyFree').disabled=used;$('#buyFree').textContent=used?'내일 다시':'무료로 열기';
-  $('#buyN').disabled=SV.gold<300;$('#buyP').disabled=SV.gems<60;$('#buyP10').disabled=SV.gems<540;
-  const ci=`<img src="${icon('coin',36)}" alt="">`,gi=`<img src="${icon('gemI',36)}" alt="">`;$('#buyN').innerHTML=ci+'300';$('#buyP').innerHTML=gi+'60';$('#buyP10').innerHTML=gi+'540';
+  $('#buyN').disabled=SV.gold<300||nBuy()>=NLIM;$('#buyP').disabled=SV.gems<PP;$('#buyP10').disabled=SV.gems<PP*9;
+  const ci=`<img src="${icon('coin',36)}" alt="">`,gi=`<img src="${icon('gemI',36)}" alt="">`;$('#buyN').innerHTML=nBuy()>=NLIM?'내일 다시':ci+'300';$('#buyP').innerHTML=gi+PP;$('#buyP10').innerHTML=gi+n0(PP*9);
 }
 function openChest(items,note){
   SV.items.push(...items);persist();sfx('buy');renderLobby();
   popup('상자 열기',items,note||items.map(it=>`${GRADES[it.g].n} ${GEAR[it.k].n}`).join(' · '));
 }
 $('#buyFree').onclick=()=>{SV.free=today();track('chest');openChest([rollGear(T_N)])};
-$('#buyN').onclick=()=>{SV.gold-=300;track('chest');openChest([rollGear(T_N)])};
-$('#buyP').onclick=()=>{SV.gems-=60;track('chest');openChest([rollGear(T_P)])};
-$('#buyP10').onclick=()=>{SV.gems-=540;track('chest');const a=Array.from({length:10},()=>rollGear(T_P));if(!a.some(i=>i.g>=2))a[9]=rollGear([0,0,.8,.17,.03]);openChest(a,`희귀 이상 ${a.filter(i=>i.g>=2).length}개`)};
+$('#buyN').onclick=()=>{SV.gold-=300;SV.nb={d:today(),n:nBuy()+1};track('chest');openChest([rollGear(T_N)])};
+$('#buyP').onclick=()=>{SV.gems-=PP;track('chest');openChest([rollGear(T_P)])};
+$('#buyP10').onclick=()=>{SV.gems-=PP*9;track('chest');const a=Array.from({length:10},()=>rollGear(T_P));if(!a.some(i=>i.g>=2))a[9]=rollGear([0,0,.8,.17,.03]);openChest(a,`희귀 이상 ${a.filter(i=>i.g>=2).length}개`)};
 $('#shopOk').onclick=()=>{$('#shopOv').hidden=true};
 for(const b of $$('#nav button'))b.onclick=()=>{TAB=b.dataset.t;renderLobby()};
 const STG=document.createElement('canvas'),EMB=[];
@@ -721,7 +727,7 @@ function newRun(cls,ch,sv=SV,tut=false){
   const gs=gearStats(cls,sv);
   G={cls,ch,gs,t:0,d:0,acc:0,nextPack:60,b1:0,b2:0,kingK:0,area:0,areaT:[0],bossTs:[],oil:0,lightM:1,bigMap:false,kills:0,lv:1,xp:0,next:xpNeed(1),pend:0,chests:0,over:false,win:false,pause:null,shake:0,hurtT:0,
     charms:[],ins:{L:{},s:{},same:{},rainbow:0,full:0,uq:{},lines:0,cells:0},sel:null,cdt:{},orb:[],hm:new Map(),hams:[],awk:{},buf:{},shrines:[],corpses:[],nextShrine:75,runGold:0,gch:0,merges:0,melts:0,xpM:1,goldM:1,p:{x:AW/2,y:AW/2,face:1,inv:0,hp:0,maxhp:0,wt:0},mobs:[],shots:[],es:[],loot:[],fx:[],parts:[],texts:[],pools:[],dl:{},
-    hpM:1+1.3*(ch-1),dmM:1+.6*(ch-1),spM:1+.25*(ch-1),map:null};
+    hpM:CH_HP[ch-1],dmM:CH_DM[ch-1],spM:1+.25*(ch-1),map:null};
   if(tut){G.tut={s:0,t:0,l0:0,row:0,cleared:0};G.dmM=.4}   // 튜토리얼: 적 피해 40%
   enterArea(0);
   G.charms.push({u:++uid,col:AFF[cls],sh:'1',rot:0,x:0,y:GRID-1,in:true,r:0,st:'atk',v:3});
@@ -957,7 +963,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.over
 function nearest(x,y,maxd,ex){let b=null,bd=maxd*maxd;for(const m of G.mobs){if(m.dead||(ex&&ex.has(m)))continue;const d=(m.x-x)**2+(m.y-y)**2;if(d<bd){bd=d;b=m}}return b}
 function nearestN(x,y,n,maxd){const a=[];for(const m of G.mobs){if(m.dead)continue;const d=(m.x-x)**2+(m.y-y)**2;if(d<maxd*maxd)a.push([d,m])}return a.sort((u,v)=>u[0]-v[0]).slice(0,n).map(v=>v[1])}
 function shot(o){const P=G.p;G.shots.push({...o,x:P.x,y:P.y-6,vx:Math.cos(o.a)*o.sp,vy:Math.sin(o.a)*o.sp,t:0})}
-const CD={sword:.95,bow:.6,staff:1,daggers:.6};
+const CD={sword:.95,bow:.6,staff:1,daggers:.6};   // v12 궁수: 화살 2발 · 관통 4 · 피해 26(이전 1발 · 관통 2 · 21) — 무리 상대로 다른 직업보다 크게 밀려서
 function fireWeapon(){
   const P=G.p,gs=G.gs,dm=pw()*(1+.03*(G.sk[AFF[G.cls]]||0))*(1+.07*(G.lv-1));
   switch(CLASSES[G.cls].w){
@@ -969,8 +975,8 @@ function fireWeapon(){
         const da=Math.abs(((Math.atan2(dy,dx)-a)%TAU+TAU*1.5)%TAU-Math.PI);if(da<1.15||dist<o.r+22){hit(o,52*dm);if(!o.m.boss){o.x+=dx/(dist||1)*14;o.y+=dy/(dist||1)*14}}}
       return true}
     case 'bow':{
-      const t=nearest(P.x,P.y,560);if(!t)return false;const n=1+gs.extra,a0=Math.atan2(t.y-P.y,t.x-P.x);
-      for(let i=0;i<n;i++)shot({k:'arrow',a:a0+(i-(n-1)/2)*.16,sp:600,dmg:21*dm,r:7,pierce:1+(G.cls==='archer'?1:0),life:1.1,zap:1});
+      const t=nearest(P.x,P.y,560);if(!t)return false;const n=2+gs.extra,a0=Math.atan2(t.y-P.y,t.x-P.x);
+      for(let i=0;i<n;i++)shot({k:'arrow',a:a0+(i-(n-1)/2)*.16,sp:600,dmg:26*dm,r:7,pierce:4,life:1.1,zap:1});
       return true}
     case 'daggers':{
       const n=2+gs.extra,ts=nearestN(P.x,P.y,n,460);if(!ts.length)return false;
@@ -1625,22 +1631,28 @@ $('#quitBtn').onclick=()=>{$('#pause').hidden=true;end(false,true)};
 function end(win,quit){
   if(G.tut){G.over=true;setTimeout(()=>tutDone(true),0);return}   // 튜토리얼 중 포기·쓰러짐 = 건너뛰기
   if(G.ended)return;G.ended=true;G.over=true;if(BOT)return;
-  const ch=G.ch,gold=Math.round(((G.kills*.6+G.t*.8+(win?300:0))*ch+G.runGold)*(G.goldM||1)*(1+(G.gs.goldT||0))*(quit?.5:1));
+  const ch=G.ch,rw=runRewards(win,quit),{gold,gems,items,first}=rw;
   const q0=qDoneN(),a0=achReadyN();track('kills',G.kills);if(win)track('wins');track('lines',G.ins.lines);track('boss',G.bossK||0);track('gob',G.gobK||0);if(G.area>=2)track('area3');track('elite',G.elK||0);track('shrine',G.shrU||0);track('awk',Object.keys(G.awk).length);
   const qN=qDoneN()-q0,aN=achReadyN()-a0;
-  let gems=(G.kingK?10:0)*ch+(win?30*ch:0);
-  const first=win&&ch===SV.maxCh;if(first){gems+=100;SV.maxCh++;SV.ch=SV.maxCh}
-  const items=[];if(win)items.push(rollGear(T_P));if(G.kingK&&Math.random()<.5)items.push(rollGear(T_N));
-  SV.gold+=gold;SV.gems+=gems;SV.items.push(...items);
-  const prev=SV.best[ch],cur={t:G.t,k:G.kills,win,a:G.area+1};if(!prev||(win&&!prev.win)||(win===!!prev.win&&cur.t>prev.t))SV.best[ch]=cur;
+  giveRun(rw,ch,win);
   persist();
   setTimeout(()=>{
     $('#endT').textContent=win?'원정 성공!':quit?'원정 포기':'원정 실패';
     $('#eStats').innerHTML=statsHtml();
-    $('#eRew').innerHTML=`<span><img src="${icon('coin',24)}" alt="">금화 ${n0(gold)}</span>${gems?`<span><img src="${icon('gemI',24)}" alt="">보석 ${n0(gems)}</span>`:''}${first?`<span>챕터 ${SV.maxCh} 열림</span>`:''}${qN?`<span>퀘스트 ${qN}개 완료</span>`:''}${aN?`<span>업적 ${aN}개 달성</span>`:''}`;
+    $('#eRew').innerHTML=`<span><img src="${icon('coin',24)}" alt="">금화 ${n0(gold)}</span>${gems?`<span><img src="${icon('gemI',24)}" alt="">보석 ${n0(gems)}</span>`:''}${first?`<span>${ch<MAXCH?`챕터 ${SV.maxCh} 열림`:'최종 챕터 정복'}</span>`:''}${qN?`<span>퀘스트 ${qN}개 완료</span>`:''}${aN?`<span>업적 ${aN}개 달성</span>`:''}`;
     $('#eItems').innerHTML=items.map(it=>`<div class="slot" style="--gc:${GRADES[it.g].c}">${slotHtml(it,'')}</div>`).join('');
     $('#hud').hidden=true;$('#end').hidden=false;
   },win?1000:quit?0:500);
+}
+// 원정 보상(종료 화면 · 모의 실험 공용). 첫 클리어 = 그 챕터를 처음 깬 판
+function runRewards(win,quit){
+  const ch=G.ch,gold=Math.round(((G.kills*KILL_G+G.t*TIME_G+(win?300:0))*(1+GOLD_CH*(ch-1))+G.runGold)*(G.goldM||1)*(1+(G.gs.goldT||0))*(quit?.5:1));
+  const first=win&&!(SV.best[ch]&&SV.best[ch].win),items=[];if(win&&Math.random()<WIN_N)items.push(rollGear(T_N));
+  return{gold,gems:first?FIRST_GEM:0,items,first};
+}
+function giveRun(r,ch,win){
+  SV.gold+=r.gold;SV.gems+=r.gems;SV.items.push(...r.items);if(r.first&&ch===SV.maxCh&&SV.maxCh<MAXCH){SV.maxCh++;SV.ch=SV.maxCh}
+  const prev=SV.best[ch],cur={t:G.t,k:G.kills,win,a:G.area+1};if(!prev||(win&&!prev.win)||(win===!!prev.win&&cur.t>prev.t))SV.best[ch]=cur;
 }
 $('#endBtn').onclick=()=>{$('#end').hidden=true;G=null;$('#lobby').hidden=false;TAB='run';renderLobby()};
 function start(){
