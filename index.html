@@ -384,18 +384,18 @@ const AFF={warrior:'steel',archer:'bolt',mage:'fire',rogue:'poison'};
 const AWK={fire:'메테오',ice:'얼음 구체',bolt:'번개 폭풍',poison:'시체 폭발',steel:'소용돌이',holy:'천벌'};
 const AWKD={fire:'3초마다 큰 운석이 떨어진다',ice:'느린 얼음 구체가 관통하며 얼린다',bolt:'1.2초마다 낙뢰 3발',poison:'중독된 적이 죽으면 폭발하며 독을 퍼뜨린다',steel:'칼날 반경 1.6배 · 칼날 +3개',holy:'2초마다 빛의 기둥 2발 · 생명력 회복'};
 const UQ={anni:{n:'멸절의 룬',sh:'1',d:'모든 기술 Lv +1'},torch:{n:'지옥불 횃불',sh:'I2',d:'친화 색 기술 Lv +6'},greed:{n:'탐욕의 행운',sh:'I3',d:'경험치 +30% · 금화 +50%'},slime:{n:'왕의 점액',sh:'I2',d:'룬어 판정에서 어느 색으로도 인정'}};
-const RW=[1,1.25,1.5,1.5];
+const RW=[1.4,1.7,2,2];   // 칸당 기술 레벨(일반·마법·희귀·고유). v11: 룬은 적게·하나는 강하게(이전 1·1.25·1.5·1.5)
 const DIFF=['보통','악몽','지옥'];
 const LINE={fire:'화염구 +1발 · 폭발 범위 +40% · 화상',ice:'적중 시 20% 확률 빙결',bolt:'연쇄 +2 · 번개 피해 +25%',poison:'독 늪 +1개 · 독 피해 +25%',steel:'칼날 +2개 · 칼날 피해 +25%',holy:'망치 +1개 · 초당 생명력 +1.5'};
 const GRID=6;
-// 룬 모양 1~5칸 21종(회전만, 뒤집기 없음). w = 출현 가중(합 100): 1칸 30 · 2칸 28 · 3칸 20 · 4칸 14 · 5칸 8, 같은 크기끼리 나눔
+// 룬 모양 1~5칸 21종(회전만, 뒤집기 없음). w = 출현 가중(합 100): 1칸 12 · 2칸 22 · 3칸 26 · 4칸 24 · 5칸 16(v11: 큰 모양 비중 ↑, 이전 30·28·20·14·8), 같은 크기끼리 나눔
 const SZN=['','작은','큰','거대','고대','태고의'];
 const CSH=Object.fromEntries(Object.entries({
   1:[[0,0]],I2:[[0,0],[0,1]],I3:[[0,0],[0,1],[0,2]],L3:[[0,0],[0,1],[1,1]],
   I4:[[0,0],[0,1],[0,2],[0,3]],O4:[[0,0],[1,0],[0,1],[1,1]],T4:[[0,0],[1,0],[2,0],[1,1]],S4:[[1,0],[2,0],[0,1],[1,1]],Z4:[[0,0],[1,0],[1,1],[2,1]],L4:[[0,0],[0,1],[0,2],[1,2]],J4:[[1,0],[1,1],[1,2],[0,2]],
   I5:[[0,0],[0,1],[0,2],[0,3],[0,4]],L5:[[0,0],[0,1],[0,2],[0,3],[1,3]],J5:[[1,0],[1,1],[1,2],[1,3],[0,3]],P5:[[0,0],[1,0],[0,1],[1,1],[0,2]],Q5:[[0,0],[1,0],[0,1],[1,1],[1,2]],
   T5:[[0,0],[1,0],[2,0],[1,1],[1,2]],U5:[[0,0],[2,0],[0,1],[1,1],[2,1]],V5:[[0,0],[0,1],[0,2],[1,2],[2,2]],X5:[[1,0],[0,1],[1,1],[2,1],[1,2]],Y5:[[1,0],[0,1],[1,1],[1,2],[1,3]],
-}).map(([k,c])=>[k,{n:SZN[c.length],c,w:[0,30,28,20,14,8][c.length]/[0,1,1,2,7,10][c.length]}]));
+}).map(([k,c])=>[k,{n:SZN[c.length],c,w:[0,12,22,26,24,16][c.length]/[0,1,1,2,7,10][c.length]}]));
 const ncell=c=>(c.cc||CSH[c.sh].c).length;   // 조각(cc)은 남은 칸 목록
 const CSTAT={atk:['공격력 +%v%',3],hp:['최대 생명력 +%v',10],spd:['이동 속도 +%v%',2],crit:['치명타 +%v%',2],cdr:['재사용 대기 -%v%',2],light:['시야 +%v%',3]};
 const CRAR=[{n:'',m:1,c:'#e8e4da'},{n:'마법 ',m:1.5,c:'#8aa2ff'},{n:'희귀 ',m:2,c:'#f0dc6a'},{n:'',m:2,c:'#ffb340'}];
@@ -555,7 +555,7 @@ const rTxt=r=>[r.gold&&`금화 ${n0(r.gold)}`,r.gems&&`보석 ${r.gems}`,r.energ
 function openMeta(title,html){$('#metaT').textContent=title;$('#metaB').innerHTML=html;$('#metaOv').hidden=false}
 $('#metaOk').onclick=()=>{$('#metaOv').hidden=true;renderLobby()};
 // 일일 퀘스트: 날짜 고정 무작위 5개, 하나당 활동 점수 20 → 활동 상자 20·40·60·80·100
-const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:15,n:'룬 줄 지우기',r:{gems:10}},{k:'boss',g:3,n:'보스 처치',r:{gems:10}},
+const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:12,n:'룬 줄 지우기',r:{gems:10}},{k:'boss',g:3,n:'보스 처치',r:{gems:10}},
   {k:'gob',g:1,n:'보물 고블린 처치',r:{gold:500}},{k:'area3',g:1,n:'지역 3 도달',r:{gems:10}},{k:'up',g:2,n:'장비 강화',r:{gold:300}},{k:'chest',g:1,n:'상점 상자 열기',r:{gold:200}},
   {k:'elite',g:5,n:'정예 처치',r:{gold:300}},{k:'shrine',g:3,n:'성소 사용',r:{gold:300}},{k:'awk',g:1,n:'각성',r:{gems:10}}];
 const QPTS=20,QBOX=[[20,{gold:500}],[40,{energy:10}],[60,{gems:20}],[80,{chest:'N'}],[100,{gems:50}]];
@@ -579,7 +579,7 @@ function openQuest(){
   for(const b of $$('#metaB [data-b]'))b.onclick=()=>{const j=+b.dataset.b;if(d.box.includes(j)||d.act<QBOX[j][0])return;d.box.push(j);const g=grant(QBOX[j][1]);if(g.items.length)popup('활동 상자',g.items,g.text);else toast(`활동 상자 · ${g.text}`);openQuest()};
 }
 // 업적: 누적 기록 단계형, 단계마다 보석
-const ACH=[{id:'runs',n:'원정 횟수',t:[5,20,50,100]},{id:'kills',n:'누적 처치',t:[2000,10000,50000,200000]},{id:'wins',n:'원정 성공',t:[1,5,20,50]},{id:'lines',n:'룬 줄 지우기',t:[50,300,1500,5000]},
+const ACH=[{id:'runs',n:'원정 횟수',t:[5,20,50,100]},{id:'kills',n:'누적 처치',t:[2000,10000,50000,200000]},{id:'wins',n:'원정 성공',t:[1,5,20,50]},{id:'lines',n:'룬 줄 지우기',t:[40,250,1200,4000]},
   {id:'gob',n:'보물 고블린 처치',t:[5,25,100,300]},{id:'boss',n:'보스 처치',t:[10,50,200,600]},{id:'awk',n:'각성',t:[5,30,100,300]},{id:'ch',n:'챕터 열기',t:[2,3,4,5],v:()=>SV.maxCh,f:v=>`챕터 ${v}`},
   {id:'grade',n:'장비 등급',t:[1,2,3,4],v:()=>Math.max(0,...SV.items.map(i=>i.g)),f:v=>`${GRADES[v].n} 장비`},{id:'tal',n:'재능 강화',t:[5,20,50,80],v:()=>SV.tal.n}];
 const ACH_R=[20,40,80,150];
@@ -727,7 +727,7 @@ function newRun(cls,ch,sv=SV,tut=false){
   G.charms.push({u:++uid,col:AFF[cls],sh:'1',rot:0,x:0,y:GRID-1,in:true,r:0,st:'atk',v:3});
   rebuildRun();G.p.hp=G.p.maxhp;
 }
-const xpNeed=l=>Math.round(5+l*3+l*l*.6);
+const xpNeed=l=>Math.round(5+l*3+l*l*2);   // v11: 레벨업(= 룬 선택 창) 한 판 24 → 약 17번(2차 계수 .6 → 2)
 // 지역: 5×5 칸 위 자기 회피 무작위 경로(15~21칸)를 부드럽게 이은 길 + 곁가지 막다른 길(보물 터). 길 밖(숲)은 통과 불가
 // 보스 시점: bt = 지역 진입 후 초 / q = 지역 처치 수 → 앞길에 출구, 길목에 보스
 const AREAS=[
@@ -845,7 +845,7 @@ function fits(ch,ax,ay,rot){
 function makeCharm(minR=0){
   let s=Math.random()*100,sh='1';for(const k in CSH){s-=CSH[k].w;if(s<=0){sh=k;break}}
   const owned=inBag().filter(c=>c.col!=='wild'&&!c.uq).map(c=>c.col),col=owned.length&&Math.random()<.35?pick(owned):pick(Object.keys(COLORS));
-  const rr=Math.random(),r=Math.max(minR,G.d>200&&rr<.15?2:rr<.35+G.d/1200?1:0);
+  const rr=Math.random(),r=Math.max(minR,G.d>200&&rr<.25?2:rr<.5+G.d/1200?1:0);   // v11: 룬은 적게·하나는 강하게(희귀 .15 → .25, 마법 .35 → .5)
   const st=pick(Object.keys(CSTAT)),n=CSH[sh].c.length;
   return{u:++uid,col,sh,rot:0,x:0,y:0,in:false,r,st,v:Math.round(CSTAT[st][1]*n*CRAR[r].m)};
 }
@@ -1064,7 +1064,7 @@ function kill(m){
   if(m.t==='imp'){G.corpses.push({x:m.x,y:m.y,t:G.t});for(const o of G.mobs)if(o.t==='imp'&&!o.dead&&dd(o,m)<140*140)o.flee=1}
   if(G.awk.poison&&m.psn>0){const r=60,dm=15*lvM(G.sk.poison||1)*pw();G.fx.push({k:'boom',x:m.x,y:m.y,r,t:0,life:.35,g:1});for(const o of G.mobs)if(!o.dead&&dd(o,m)<(r+o.r)**2){o.psn=3;o.pdt=3;o.pdps=Math.max(o.pdps||0,dm*.2);hurt(o,dm)}}
   if(m.m.gob){G.gobK=(G.gobK||0)+1;addLoot({k:'chest',x:m.x,y:m.y+10});addLoot({k:'oil',x:m.x+18,y:m.y});G.runGold+=100*G.ch;toast('보물 고블린 처치 · 금화 +'+100*G.ch)}
-  else if(m.el)addLoot({k:'rune',x:m.x,y:m.y,ch:makeCharm(1)});
+  else if(m.el&&Math.random()<.5)addLoot({k:'rune',x:m.x,y:m.y,ch:makeCharm(2)});   // v11: 정예 룬 매번 마법 이상 → 절반 확률로 희귀
   else if(!m.m.boss&&Math.random()<.008)addLoot({k:'heart',x:m.x,y:m.y});
   if(m.m.boss){G.shake=.6;sfx('boom');if(m.t==='lich'){G.win=true;end(true);return}addLoot({k:'chestG',x:m.x,y:m.y+10});if(m.t==='king')G.kingK=1;G.exitOpen=1;for(let i=0;i<10;i++)addLoot({k:'gem',x:m.x+R(-50,50),y:m.y+R(-50,50),v:5});toast(`${m.m.n} 처치 · 금상자 · 출구가 열렸다`)}
 }
@@ -1089,7 +1089,7 @@ function director(dt){
     const r=Math.random(),ty=k>150&&r<.07?'golem':k>90&&r<.1?'shaman':k>60&&r<.24?'skel':k>40&&r<.45?'imp':r<.7?'bat':'slime',el=k>45&&Math.random()<.002;
     const a=spawn(ty,el);if(ty==='imp')spawn('imp',false,a.x+R(-30,30),a.y+R(-30,30));
   }
-  if(t>=G.nextPack){G.nextPack=Math.max(G.nextPack+60,t+1);const e=spawn(pick(k>150?['golem','skel','slime','imp']:['slime','bat','imp']),true);for(let i=0;i<5;i++)spawn('bat',false,e.x+R(-40,40),e.y+R(-40,40));toast('정예 등장 · 처치하면 룬을 떨군다')}
+  if(t>=G.nextPack){G.nextPack=Math.max(G.nextPack+60,t+1);const e=spawn(pick(k>150?['golem','skel','slime','imp']:['slime','bat','imp']),true);for(let i=0;i<5;i++)spawn('bat',false,e.x+R(-40,40),e.y+R(-40,40));toast('정예 등장 · 처치하면 절반 확률로 희귀 룬')}
   if(t>=G.nextShrine){G.nextShrine=Math.max(G.nextShrine+75,t+60);placeShrine()}
   const A=AREAS[G.area];if(!G.sealOff&&(A.q?G.ak>=A.q:G.t-G.at0>=A.bt))bossAhead(A);
 }
