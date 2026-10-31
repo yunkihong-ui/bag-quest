@@ -429,7 +429,8 @@ const DIFF=['보통','악몽','지옥'];   // 챕터 1~5 보통 · 6~10 악몽 �
 // v12 챕터 15개(15 = 최종). 적 체력·공격 배율: 챕터 1은 초보 보호, 뒤로 갈수록 곱절 — 챕터 15는 신화 풀세트 수준
 const MAXCH=15,CH_HP=[0.7,0.8,2.3,6.7,11,16,21,32,41,47,57,68,76,85,109],CH_DM=[0.7,0.8,1.9,4.4,6.7,8.6,11,15,19,21,24,28,31,34,41];   // v13: 챕터 11 ×1.06 · 12~15 ×1.12(새 장비 체계에서 후반 속도가 v12보다 약 1챕터 빨라 맞춤, 1~10은 그대로)
 // v12 원정 보상: 금화는 챕터당 +GOLD_CH(이전 ×챕터), 일반 클리어 보석 없음(이전 30×챕터), 첫 클리어 = 보석(황금 상자 없음), 클리어 장비 = WIN_N 확률로 나무 상자(이전 매번 황금 상자)
-const GOLD_CH=0.15,FIRST_GEM=50,WIN_N=0.25,KILL_G=0.2,TIME_G=0.5,SC_BOSS=2,SC_START=5;   // v13 SC_BOSS: 보스 1마리당 주문서   // 금화 = (처치×KILL_G + 시간(초)×TIME_G + 클리어 300) × (1 + GOLD_CH×(챕터-1))
+// v14 원정 압축: 난이도 시계(적 강화·출현·정예·성소·룬 등급)는 지역마다 AREA_D씩, 지역 안에서는 TC배 속도(AREA_D를 넘기면 1배) · RUN_HP = 잡몹 체력 [9챕터까지, 10챕터부터](한 판 룬이 적은 만큼) · SEAL_T = 봉인이 저절로 풀리는 초 · SC_BOSS 보스 5마리 × 1.2장 = v13 한 판 6장
+const GOLD_CH=0.15,FIRST_GEM=50,WIN_N=0.25,KILL_G=0.47,TIME_G=0.5,SC_BOSS=1.2,SC_START=5,TC=3,AREA_D=90,RUN_HP=[0.7,0.66],SEAL_T=18;   // 금화 = (처치×KILL_G + 난이도 시계(초)×TIME_G + 클리어 300) × (1 + GOLD_CH×(챕터-1))
 const LINE={fire:'화염구 +1발 · 폭발 범위 +40% · 화상',ice:'적중 시 20% 확률 빙결',bolt:'연쇄 +2 · 번개 피해 +25%',poison:'독 늪 +1개 · 독 피해 +25%',steel:'칼날 +2개 · 칼날 피해 +25%',holy:'망치 +1개 · 초당 생명력 +1.5'};
 const GRID=6;
 // 룬 모양 1~5칸 21종(회전만, 뒤집기 없음). w = 출현 가중(합 100): 1칸 12 · 2칸 22 · 3칸 26 · 4칸 24 · 5칸 16(v11: 큰 모양 비중 ↑, 이전 30·28·20·14·8), 같은 크기끼리 나눔
@@ -451,9 +452,11 @@ const MT={
   imp:{n:'타락자',hp:12,sp:100,r:12,dmg:7,xp:1,foot:14,sw:12,pc:'#d04a3a'},
   shaman:{n:'타락 주술사',hp:30,sp:60,r:13,dmg:6,xp:3,foot:16,sw:12,pc:'#c0503a'},
   goblin:{n:'보물 고블린',hp:140,sp:135,r:14,dmg:0,xp:5,foot:15,sw:14,pc:'#d8b040',gob:1},
-  chief:{n:'주술사 우두머리',hp:1500,sp:55,r:30,dmg:20,xp:30,foot:30,sw:22,boss:1,spr:'shaman',sc:2,pc:'#c0503a'},
-  king:{n:'슬라임 왕',hp:4500,sp:50,r:50,dmg:22,xp:40,foot:44,sw:52,boss:1,pc:'#4a9bf5'},
-  lich:{n:'리치',hp:80000,sp:48,r:34,dmg:25,xp:0,foot:30,sw:26,boss:1,pc:'#a865e8',fly:1},
+  chief:{n:'주술사 우두머리',hp:300,sp:55,r:30,dmg:20,xp:30,foot:30,sw:22,boss:1,spr:'shaman',sc:2,pc:'#c0503a'},
+  king:{n:'슬라임 왕',hp:1200,sp:50,r:50,dmg:22,xp:40,foot:44,sw:52,boss:1,gc:1,pc:'#4a9bf5'},
+  golemK:{n:'바위 골렘 대장',hp:2100,sp:44,r:40,dmg:24,xp:35,foot:36,sw:36,boss:1,spr:'golem',sc:2,ai:'king',mc:0,pc:'#8a7a5a'},
+  skelK:{n:'해골 장군',hp:2700,sp:56,r:29,dmg:22,xp:40,foot:31,sw:26,boss:1,spr:'skel',sc:2.4,ai:'chief',pk:'bone',mn:'skel',gc:1,pc:'#ece4cf'},
+  lich:{n:'리치',hp:6600,sp:48,r:34,dmg:25,xp:0,foot:30,sw:26,boss:1,pc:'#a865e8',fly:1},
 };
 
 /* ---------- 저장 ---------- */
@@ -536,7 +539,7 @@ function renderRun(){
   }
   const C=CLASSES[SV.cls],gs=gearStats(SV.cls),wp=itemById(SV.eq.weapon);
   $('#clsinfo').innerHTML=`<b>${C.n}</b> · ${C.d}<br>고유 능력: ${C.pass}<br>무기: <span style="color:${wp?GRADES[wp.g].c:'#888'}">${wp?`${GRADES[wp.g].n} ${GEAR[wp.k].n}(${C.wn}) +${wp.e}`:'없음'}</span> · 공격력 ${Math.round(gs.atk)} · 생명력 ${Math.round(C.hp+gs.hp)}`;
-  const dB=Math.min(2,(SV.ch-1)/5|0),cleared=SV.best[SV.ch]&&SV.best[SV.ch].win;$('#chT').innerHTML=`챕터 ${SV.ch}${SV.ch===MAXCH?' · 최종':''} · <span class="d${dB}">${DIFF[dB]}</span>`;$('#chD').textContent=`3지역 · 적 체력 ×${CH_HP[SV.ch-1]} · 공격 ×${CH_DM[SV.ch-1]}${cleared?' · 클리어함':` · 첫 클리어 보석 ${FIRST_GEM}`}`;
+  const dB=Math.min(2,(SV.ch-1)/5|0),cleared=SV.best[SV.ch]&&SV.best[SV.ch].win;$('#chT').innerHTML=`챕터 ${SV.ch}${SV.ch===MAXCH?' · 최종':''} · <span class="d${dB}">${DIFF[dB]}</span>`;$('#chD').textContent=`${AREAS.length}지역 · 적 체력 ×${CH_HP[SV.ch-1]} · 공격 ×${CH_DM[SV.ch-1]}${cleared?' · 클리어함':` · 첫 클리어 보석 ${FIRST_GEM}`}`;
   $('#chPrev').disabled=SV.ch<=1;$('#chNext').disabled=SV.ch>=SV.maxCh;
   const b=SV.best[SV.ch];$('#best').textContent=b?`챕터 ${SV.ch} 최고 기록 · ${b.win?'클리어 · ':b.a?`지역 ${b.a} · `:''}${fmt(b.t)} · 처치 ${n0(b.k)}`:`챕터 ${SV.ch} 기록 없음`;
 }
@@ -548,7 +551,7 @@ const TUT=[
   {t:'보관함의 룬을 <b>빛나는 빈칸으로 끌어</b> 한 줄을 채워 보자 · 꽉 찬 줄은 지워진다',low:1},
   {t:'어둠 속 <b>빨간 눈</b>이 적이다 · <b>등불 기름</b>을 주우면 시야가 넓어지고, 빛 안의 적은 느려진다'},
   {t:'보스 시간이 되면 <b>앞길에 출구</b>가 나타나고 <b>보스가 길을 막는다</b> · 처치하자'},
-  {t:'출구가 열렸다 · <b>포털</b>로 들어가면 다음 지역(원정은 3지역, 마지막은 리치)'},
+  {t:'출구가 열렸다 · <b>포털</b>로 들어가면 다음 지역(원정은 5지역, 마지막은 리치)'},
 ];
 function coach(html,{next=false,low=false}={}){const c=$('#coach');c.hidden=false;c.classList.toggle('low',low);$('#coachS').textContent=`튜토리얼 ${G.tut.s+1}/${TUT.length}`;$('#coachT').innerHTML=html;$('#coachNext').hidden=!next}
 function tutGo(s){
@@ -578,7 +581,7 @@ function tutDone(skip){
   const first=!SV.tutDone;SV.tutDone=1;if(first&&!skip)SV.gems+=50;persist();
   for(const id of['coach','joyHint','hud','bag','pick'])$('#'+id).hidden=true;
   G=null;$('#lobby').hidden=false;TAB='run';renderLobby();
-  openMeta(skip?'튜토리얼 건너뜀':'튜토리얼 완료!',`<div class="note" style="font-size:14px;text-align:left;line-height:1.75">· 끌어서 이동, 공격은 자동<br>· 레벨업 → 룬 고르기 → 보따리에 들어가 기술이 됨<br>· 가로·세로 한 줄을 채우면 지워지며 영구 각인(같은 색 = 룬어, 6색 = 무지개)<br>· 어둠 속 빨간 눈 = 적 · 등불 기름 = 시야<br>· 보스 시간 → 앞길 출구 + 길목 보스 → 포털 → 다음 지역(3지역)<br>· 곁가지 끝 보물 터 = 보물 고블린 · 오른쪽 위 지도를 누르면 전체 지도<br>· 튜토리얼은 원정 화면 아래 버튼으로 다시 할 수 있다${first&&!skip?'<br><b style="color:var(--gold)">보상: 보석 50</b>':''}</div>`);
+  openMeta(skip?'튜토리얼 건너뜀':'튜토리얼 완료!',`<div class="note" style="font-size:14px;text-align:left;line-height:1.75">· 끌어서 이동, 공격은 자동<br>· 레벨업 → 룬 고르기 → 보따리에 들어가 기술이 됨<br>· 가로·세로 한 줄을 채우면 지워지며 영구 각인(같은 색 = 룬어, 6색 = 무지개)<br>· 어둠 속 빨간 눈 = 적 · 등불 기름 = 시야<br>· 보스 시간 → 앞길 출구 + 길목 보스 → 포털 → 다음 지역(5지역)<br>· 곁가지 끝 보물 터 = 보물 고블린 · 오른쪽 위 지도를 누르면 전체 지도<br>· 튜토리얼은 원정 화면 아래 버튼으로 다시 할 수 있다${first&&!skip?'<br><b style="color:var(--gold)">보상: 보석 50</b>':''}</div>`);
 }
 $('#coachNext').onclick=()=>{if(G&&G.tut&&G.tut.s===3&&G.tut.cleared){$('#bag').hidden=true;resume();tutGo(4)}};
 $('#coachSkip').onclick=()=>{if(G&&G.tut)tutDone(true)};
@@ -653,8 +656,8 @@ $('#bPass').onclick=openPass;
 function openMeta(title,html){$('#metaT').textContent=title;$('#metaB').innerHTML=html;$('#metaOv').hidden=false}
 $('#metaOk').onclick=()=>{$('#metaOv').hidden=true;renderLobby()};
 // 일일 퀘스트: 날짜 고정 무작위 5개, 하나당 활동 점수 20 → 활동 상자 20·40·60·80·100
-const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:12,n:'룬 줄 지우기',r:{gems:5}},{k:'boss',g:3,n:'보스 처치',r:{gems:5}},
-  {k:'gob',g:1,n:'보물 고블린 처치',r:{gold:500}},{k:'area3',g:1,n:'지역 3 도달',r:{gems:5}},{k:'up',g:2,n:'장비 강화',r:{gold:300}},{k:'chest',g:1,n:'상점 상자 열기',r:{gold:200}},
+const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:12,n:'룬 줄 지우기',r:{gems:5}},{k:'boss',g:5,n:'보스 처치',r:{gems:5}},
+  {k:'gob',g:1,n:'보물 고블린 처치',r:{gold:500}},{k:'area3',g:1,n:'지역 5 도달',r:{gems:5}},{k:'up',g:2,n:'장비 강화',r:{gold:300}},{k:'chest',g:1,n:'상점 상자 열기',r:{gold:200}},
   {k:'elite',g:5,n:'정예 처치',r:{gold:300}},{k:'shrine',g:3,n:'성소 사용',r:{gold:300}},{k:'awk',g:1,n:'각성',r:{gems:5}}];
 const QPTS=20,QBOX=[[20,{gold:500}],[40,{energy:10}],[60,{gems:10}],[80,{chest:'N'}],[100,{gems:20}]];
 function dailyTick(){
@@ -677,8 +680,8 @@ function openQuest(){
   for(const b of $$('#metaB [data-b]'))b.onclick=()=>{const j=+b.dataset.b;if(d.box.includes(j)||d.act<QBOX[j][0])return;d.box.push(j);const g=grant(QBOX[j][1]);if(g.items.length)popup('활동 상자',g.items,g.text);else toast(`활동 상자 · ${g.text}`);openQuest()};
 }
 // 업적: 누적 기록 단계형, 단계마다 보석
-const ACH=[{id:'runs',n:'원정 횟수',t:[5,20,50,100]},{id:'kills',n:'누적 처치',t:[2000,10000,50000,200000]},{id:'wins',n:'원정 성공',t:[1,5,20,50]},{id:'lines',n:'룬 줄 지우기',t:[40,250,1200,4000]},
-  {id:'gob',n:'보물 고블린 처치',t:[5,25,100,300]},{id:'boss',n:'보스 처치',t:[10,50,200,600]},{id:'awk',n:'각성',t:[5,30,100,300]},{id:'ch',n:'챕터 열기',t:[3,6,10,15],v:()=>SV.maxCh,f:v=>`챕터 ${v}`},
+const ACH=[{id:'runs',n:'원정 횟수',t:[5,20,50,100]},{id:'kills',n:'누적 처치',t:[840,4200,21000,84000]},{id:'wins',n:'원정 성공',t:[1,5,20,50]},{id:'lines',n:'룬 줄 지우기',t:[21,130,640,2100]},
+  {id:'gob',n:'보물 고블린 처치',t:[4,18,73,220]},{id:'boss',n:'보스 처치',t:[14,68,270,810]},{id:'awk',n:'각성',t:[4,21,70,210]},{id:'ch',n:'챕터 열기',t:[3,6,10,15],v:()=>SV.maxCh,f:v=>`챕터 ${v}`},
   {id:'grade',n:'장비 등급',t:[1,2,3,4],v:()=>Math.max(0,...SV.items.map(i=>i.g)),f:v=>`${GRADES[v].n} 장비`},{id:'tal',n:'재능 강화',t:[5,20,50,80],v:()=>SV.tal.n}];
 const ACH_R=[10,20,40,80];
 const achVal=a=>a.v?a.v():SV.st[a.id]||0,achT=a=>SV.ach[a.id]||0,achCan=a=>achT(a)<a.t.length&&achVal(a)>=a.t[achT(a)];
@@ -837,22 +840,26 @@ function drawHeroStage(dt){
 let G=null,uid=0;
 function newRun(cls,ch,sv=SV,tut=false){
   const gs=gearStats(cls,sv);
-  G={cls,ch,gs,t:0,d:0,acc:0,nextPack:60,b1:0,b2:0,kingK:0,area:0,areaT:[0],bossTs:[],oil:0,lightM:1,bigMap:false,kills:0,lv:1,xp:0,next:xpNeed(1),pend:0,chests:0,over:false,win:false,pause:null,shake:0,hurtT:0,
+  G={cls,ch,gs,t:0,d:0,acc:0,nextPack:40,b1:0,b2:0,kingK:0,area:0,areaT:[0],bossTs:[],oil:0,lightM:1,bigMap:false,kills:0,lv:1,xp:0,next:xpNeed(1),pend:0,chests:0,over:false,win:false,pause:null,shake:0,hurtT:0,
     charms:[],ins:{L:{},s:{},same:{},rainbow:0,full:0,uq:{},lines:0,cells:0},sel:null,cdt:{},orb:[],hm:new Map(),hams:[],awk:{},buf:{},shrines:[],corpses:[],nextShrine:75,runGold:0,gch:0,merges:0,melts:0,xpM:1,goldM:1,p:{x:AW/2,y:AW/2,face:1,inv:0,hp:0,maxhp:0,wt:0},mobs:[],shots:[],es:[],loot:[],fx:[],parts:[],texts:[],pools:[],dl:{},
     hpM:CH_HP[ch-1],dmM:CH_DM[ch-1],spM:1+.25*(ch-1),map:null};
   if(tut){G.tut={s:0,t:0,l0:0,row:0,cleared:0};G.dmM=.4}   // 튜토리얼: 적 피해 40%
   enterArea(0);
   G.charms.push({u:++uid,col:AFF[cls],sh:'1',rot:0,x:0,y:GRID-1,in:true,r:0,st:'atk',v:3});
-  rebuildRun();G.p.hp=G.p.maxhp;
+  rebuildRun();G.p.hp=G.p.maxhp;if(!tut)for(let i=0;i<8;i++){const q=pathAt(G.ps+300+i*22);spawn(i%2?'bat':'slime',false,q.x+R(-50,50),q.y+R(-50,50))}
 }
-const xpNeed=l=>Math.round(5+l*3+l*l*2);   // v11: 레벨업(= 룬 선택 창) 한 판 24 → 약 17번(2차 계수 .6 → 2)
+const xpNeed=l=>Math.round((5+l*3+l*l*2)*1.2);   // v11: 2차 계수 .6 → 2 · v14: ×1.2(한 판 레벨업 9~11번)
 // 지역: 5×5 칸 위 자기 회피 무작위 경로(15~21칸)를 부드럽게 이은 길 + 곁가지 막다른 길(보물 터). 길 밖(숲)은 통과 불가
 // 보스 시점: bt = 지역 진입 후 초 / q = 지역 처치 수 → 앞길에 출구, 길목에 보스
+// v14: 지역 5개 · 지역마다 약 30초(bt초 / 봉인 q × 적 출현 배수, SEAL_T초면 저절로 풀림) · 금상자는 gc 보스(지역 2·4)만
 const AREAS=[
-  {n:'붉은 황야',bt:115,btn:'해 질 녘까지',bmsg:'해가 졌다',boss:'chief',dark:.25,tree:['tree','tree','bush'],deco:['tuft','tuft','tuft','tuft','flowerP','flowerY','stump','rock']},
-  {n:'서리 들판',q:600,bmsg:'봉인이 풀렸다',boss:'king',dark:.6,tree:['camp_pine','camp_pine','camp_pine','tree'],deco:['tuft','tuft','tuft','rock','frost','frost','stump']},
-  {n:'망자의 묘지',bt:115,btn:'자정까지',bmsg:'자정이다',boss:'lich',dark:1,tree:['deadtree','deadtree','camp_pine'],deco:['tuft','tuft','grave','grave','bones','pillar','rock']},
+  {n:'붉은 황야',bt:14,btn:'해 질 녘까지',bmsg:'해가 졌다',boss:'chief',dark:.25,tree:['tree','tree','bush'],deco:['tuft','tuft','tuft','tuft','flowerP','flowerY','stump','rock']},
+  {n:'서리 들판',q:70,bmsg:'봉인이 풀렸다',boss:'king',dark:.6,tree:['camp_pine','camp_pine','camp_pine','tree'],deco:['tuft','tuft','tuft','rock','frost','frost','stump']},
+  {n:'바위 협곡',bt:14,btn:'달이 뜰 때까지',bmsg:'달이 떴다',boss:'golemK',dark:.75,tree:['bush','tree','camp_pine'],deco:['rock','rock','rock','stump','tuft','tuft','pillar']},
+  {n:'메마른 숲',q:150,bmsg:'봉인이 풀렸다',boss:'skelK',dark:.9,tree:['deadtree','deadtree','tree'],deco:['bones','tuft','tuft','stump','rock','grave']},
+  {n:'망자의 묘지',bt:14,btn:'자정까지',bmsg:'자정이다',boss:'lich',dark:1,tree:['deadtree','deadtree','camp_pine'],deco:['tuft','tuft','grave','grave','bones','pillar','rock']},
 ];
+const LAST=AREAS.length-1;
 const GN=5,CELL=AW/GN,FC=60,FG=Math.ceil(AW/FC);
 function genRoute(){
   const lo=15,hi=21,goal=(GN-1)+',0';
@@ -937,7 +944,7 @@ function enterArea(i){
   const[sx,sy]=G.map.path.pts[0];G.p.x=sx;G.p.y=sy;G.ps=0;
   G.mobs=[];G.shots=[];G.es=[];G.pools=[];G.fx=[];G.hams=[];G.corpses=[];G.shrines=[];G.orb=[];G.hm.clear();
   G.loot=G.map.oils.map(o=>({k:'oil',x:o.x,y:o.y,s:o.s}));
-  G.bossSp=0;G.exitOpen=0;G.exitShown=0;G.at0=G.t;G.ak=0;G.sealOff=0;G.fog=new Uint8Array(FG*FG);G.mm=BOT?null:buildMinimap(G.map);G.mmDirty=1;G.fade=1;G.iiKey='';
+  G.bossSp=0;G.exitOpen=0;G.exitShown=0;G.at0=G.t;G.ak=0;G.aq=AREAS[i].q?Math.round(AREAS[i].q*G.spM):0;G.sealOff=0;G.fog=new Uint8Array(FG*FG);G.mm=BOT?null:buildMinimap(G.map);G.mmDirty=1;G.fade=1;G.iiKey='';
 }
 function nextArea(){
   for(const l of G.loot){if(l.k==='chestG')G.gch++;else if(l.k==='chest')G.chests++;else if(l.k==='rune')acquire(l.ch)}   // 바닥에 남은 금상자·상자·룬은 포털을 지나며 챙김(다음 프레임에 선택 창)
@@ -1185,39 +1192,40 @@ function kill(m){
   if(m.m.gob){G.gobK=(G.gobK||0)+1;addLoot({k:'chest',x:m.x,y:m.y+10});addLoot({k:'oil',x:m.x+18,y:m.y});G.runGold+=100*G.ch;toast('보물 고블린 처치 · 금화 +'+100*G.ch)}
   else if(m.el&&Math.random()<.5)addLoot({k:'rune',x:m.x,y:m.y,ch:makeCharm(2)});   // v11: 정예 룬 매번 마법 이상 → 절반 확률로 희귀
   else if(!m.m.boss&&Math.random()<.008)addLoot({k:'heart',x:m.x,y:m.y});
-  if(m.m.boss){G.shake=.6;sfx('boom');if(m.t==='lich'){G.win=true;end(true);return}addLoot({k:'chestG',x:m.x,y:m.y+10});if(m.t==='king')G.kingK=1;G.exitOpen=1;for(let i=0;i<10;i++)addLoot({k:'gem',x:m.x+R(-50,50),y:m.y+R(-50,50),v:5});toast(`${m.m.n} 처치 · 금상자 · 출구가 열렸다`)}
+  if(m.m.boss){G.shake=.6;sfx('boom');if(m.t==='lich'){G.win=true;end(true);return}if(m.m.gc)addLoot({k:'chestG',x:m.x,y:m.y+10});if(m.t==='king')G.kingK=1;G.exitOpen=1;for(let i=0;i<10;i++)addLoot({k:'gem',x:m.x+R(-50,50),y:m.y+R(-50,50),v:5});toast(`${m.m.n} 처치${m.m.gc?' · 금상자':''} · 출구가 열렸다`)}
 }
 function addLoot(o){o.s=wallPush(o,8).s;G.loot.push(o)}
 function dmgP(v,src){v*=(1-G.p.dr)*(G.buf.ward>0?.5:1);G.p.hp-=v;G.dl[src]=(G.dl[src]||0)+Math.round(v)}
 
 /* ---------- 적 ---------- */
 function spawn(t,el,x,y){
-  const m=MT[t],P=G.p,k=G.d/60,hm=m.boss?G.hpM:(1+k*2+k*k*HPQ)*(el?5:1)*G.hpM;   // v7: 각인으로 후반 힘이 계속 쌓여 후반 체력 가속(HPQ)
+  const m=MT[t],P=G.p,k=G.d/60,hm=m.boss?G.hpM:(1+k*2+k*k*HPQ)*(el?5:1)*G.hpM*RUN_HP[G.ch>=10?1:0];   // v7: 각인으로 후반 힘이 계속 쌓여 후반 체력 가속(HPQ)
   if(x===undefined){
     const d=Math.hypot(W,H)/2+60;[x,y]=pathSpot(d,d+380);
   }
   const o={t,m,x,y,hp:m.hp*hm,mhp:m.hp*hm,el:!!el,r:m.r*(el?1.2:1),life:15,flee:0,pdt:0,pdps:0,slow:0,frz:0,flash:0,burn:0,psn:0,cd:R(1,2.5),cd2:6,st:'walk',ph:R(0,TAU),z:0};
   G.mobs.push(o);return o;
 }
+function diffT(){const e=G.t-G.at0;return G.area*AREA_D+Math.min(e*TC,AREA_D)+Math.max(0,e-AREA_D/TC)}
 function director(dt){
   if(G.tut){tutDirector(dt);return}
-  const t=G.t,k=G.d,boss=G.mobs.some(m=>m.m.boss);
+  const k=G.d,boss=G.mobs.some(m=>m.m.boss);
   G.acc=Math.min(6,G.acc+dt*(1+k/60*1.45)*(boss?.5:1)*G.spM);
   while(G.acc>=1){
     G.acc--;if(G.mobs.length>=230)break;
     const r=Math.random(),ty=k>150&&r<.07?'golem':k>90&&r<.1?'shaman':k>60&&r<.24?'skel':k>40&&r<.45?'imp':r<.7?'bat':'slime',el=k>45&&Math.random()<.002;
     const a=spawn(ty,el);if(ty==='imp')spawn('imp',false,a.x+R(-30,30),a.y+R(-30,30));
   }
-  if(t>=G.nextPack){G.nextPack=Math.max(G.nextPack+60,t+1);const e=spawn(pick(k>150?['golem','skel','slime','imp']:['slime','bat','imp']),true);for(let i=0;i<5;i++)spawn('bat',false,e.x+R(-40,40),e.y+R(-40,40));toast('정예 등장 · 처치하면 절반 확률로 레어 룬')}
-  if(t>=G.nextShrine){G.nextShrine=Math.max(G.nextShrine+75,t+60);placeShrine()}
-  const A=AREAS[G.area];if(!G.sealOff&&(A.q?G.ak>=A.q:G.t-G.at0>=A.bt))bossAhead(A);
+  if(k>=G.nextPack&&!boss){G.nextPack=Math.max(G.nextPack+60,k+1);const e=spawn(pick(k>150?['golem','skel','slime','imp']:['slime','bat','imp']),true);for(let i=0;i<5;i++)spawn('bat',false,e.x+R(-40,40),e.y+R(-40,40));toast('정예 등장 · 처치하면 절반 확률로 레어 룬')}
+  if(k>=G.nextShrine&&!G.sealOff){G.nextShrine=Math.max(G.nextShrine+75,k+60);placeShrine()}
+  const A=AREAS[G.area],el=G.t-G.at0;if(!G.sealOff&&(A.q?G.ak>=G.aq||el>=SEAL_T:el>=A.bt))bossAhead(A);
 }
-// 보스 시점: 앞길 약 950px(길 끝을 넘으면 길 끝)에 출구(지역 3은 제단)가 나타나고, 그 사이 길목에 보스
-function bossAhead(A,ahead=950){
+// 보스 시점: 앞길 약 450px(길 끝을 넘으면 길 끝)에 출구(마지막 지역은 제단)가 나타나고, 그 사이 길목에 보스
+function bossAhead(A,ahead=450){
   const pa=G.map.path,se=Math.min(G.ps+ahead,pa.len-40),sb=Math.min(Math.max(G.ps+300,se-430),se-150),e=pathAt(se),q=pathAt(sb);
-  G.sealOff=1;G.exitShown=1;G.map.exit={x:e.x,y:e.y};G.bossSp=1;(G.bossPs=G.bossPs||[]).push(Math.round(G.ps));
+  G.sealOff=1;G.exitShown=1;G.map.exit={x:e.x,y:e.y,s:se};G.bossSp=1;(G.bossPs=G.bossPs||[]).push(Math.round(G.ps));
   spawn(A.boss,false,q.x,q.y);banner(MT[A.boss].n);G.bossTs.push(Math.round(G.t));
-  toast(`${A.bmsg} · 앞길에 ${G.area<2?'출구가':'리치의 제단이'} 나타났다 · <b style="color:#ff8a7a">${MT[A.boss].n}</b>이(가) 길을 막는다`);
+  toast(`${A.bmsg} · 앞길에 ${G.area<LAST?'출구가':'리치의 제단이'} 나타났다 · <b style="color:#ff8a7a">${MT[A.boss].n}</b>이(가) 길을 막는다`);
 }
 // 보물 터(곁가지 끝): 65% 확률 보물 고블린(지역당 곁가지 약 1.05개 → 한 판 약 2마리)
 function treasureSpot(b){
@@ -1226,7 +1234,7 @@ function treasureSpot(b){
   else toast('보물 터가 비어 있다');
 }
 function spawnGoblin(){const[x,y]=pathSpot(200,320,.7);spawn('goblin',false,x,y);toast('보물 고블린 출현 · 15초 안에 잡기')}
-const SHR={xp:['경험의 성소','경험치 2배 20초'],rage:['분노의 성소','피해 +50% 20초'],ward:['수호의 성소','받는 피해 -50% 20초'],mag:['자석의 성소','보석 모두 끌어오기'],heal:['회복의 성소','생명력 50% 회복']};
+const SHR={xp:['경험의 성소','경험치 2배 10초'],rage:['분노의 성소','피해 +50% 10초'],ward:['수호의 성소','받는 피해 -50% 10초'],mag:['자석의 성소','보석 모두 끌어오기'],heal:['회복의 성소','생명력 50% 회복']};
 function placeShrine(){
   const pa=G.map.path;let s=G.ps+R(320,640);if(s>pa.len-260)s=G.ps-R(260,480);if(s<40)return;
   const q=pathAt(s),o=R(-.5,.5)*q.r;G.shrines.push({x:q.x+q.nx*o,y:q.y+q.ny*o,s,k:pick(Object.keys(SHR))});if(G.shrines.length>2)G.shrines.shift();toast('어둠 속에 성소가 빛난다');
@@ -1235,7 +1243,7 @@ function useShrine(s){
   G.shrU=(G.shrU||0)+1;const P=G.p;
   if(s.k==='mag'){for(const l of G.loot)if(l.k==='gem')l.mag=1}
   else if(s.k==='heal')P.hp=Math.min(P.maxhp,P.hp+P.maxhp*.5);
-  else G.buf[s.k]=20;
+  else G.buf[s.k]=10;
   toast(`<b style="color:#9fd8ff">${SHR[s.k][0]}</b> · ${SHR[s.k][1]}`);sfx('chest');
 }
 function revive(m,n,rad){
@@ -1257,13 +1265,13 @@ function updMobs(dt){
     if(m.m.range){
       m.cd-=dt;const dir=d<m.m.range*.75?-.6:d>m.m.range?1:0;m.x+=ux*sp*dir*dt;m.y+=uy*sp*dir*dt;
       if(m.cd<=0&&d<m.m.range+60){m.cd=2.6;G.es.push({x:m.x,y:m.y-8,vx:dx/d*230,vy:dy/d*230,dmg:7*dmgT,r:5,t:0,life:2,k:'bone'})}
-    }else if(m.t==='king'){
+    }else if((m.m.ai||m.t)==='king'){
       m.cd-=dt;
       if(m.st==='walk'){m.x+=ux*sp*dt;m.y+=uy*sp*dt;if(m.cd<=0){m.st='wind';m.wt=.5;m.tx=P.x;m.ty=P.y}}
       else if(m.st==='wind'){m.wt-=dt;if(m.wt<=0){m.st='air';m.at=0;m.sx=m.x;m.sy=m.y}}
       else{m.at+=dt/.6;const k=Math.min(1,m.at);m.x=m.sx+(m.tx-m.sx)*k;m.y=m.sy+(m.ty-m.sy)*k;m.z=Math.sin(k*Math.PI)*90;
         if(k>=1){m.st='walk';m.z=0;m.cd=3.5;G.shake=.3;sfx('boom');G.fx.push({k:'ring',x:m.x,y:m.y,r:90,t:0,life:.4,c:'#6ccf4f'});
-          if(P.inv<=0&&dd(m,P)<90*90){dmgP(25*G.dmM,'kingland');P.inv=.5;G.hurtT=.25}for(let i=0;i<3;i++)spawn('slime',false,m.x+R(-50,50),m.y+R(-50,50))}}
+          if(P.inv<=0&&dd(m,P)<90*90){dmgP(25*G.dmM,'kingland');P.inv=.5;G.hurtT=.25}for(let i=0;i<(m.m.mc??3);i++)spawn(m.m.mn||'slime',false,m.x+R(-50,50),m.y+R(-50,50))}}
     }else if(m.t==='lich'){
       m.cd-=dt;m.cd2-=dt;m.x+=ux*sp*dt;m.y+=uy*sp*dt;
       if(m.cd<=0){m.cd=2.8;const o=R(0,TAU);for(let i=0;i<12;i++){const a=o+i*TAU/12;G.es.push({x:m.x,y:m.y-20,vx:Math.cos(a)*170,vy:Math.sin(a)*170,dmg:14*G.dmM,r:8,t:0,life:4,k:'orb'})}}
@@ -1271,10 +1279,10 @@ function updMobs(dt){
     }else if(m.t==='shaman'){
       const dir=d<150?-.8:d>230?1:0;m.x+=ux*sp*dir*dt;m.y+=uy*sp*dir*dt;m.cd-=dt;
       if(m.cd<=0){m.cd=3;revive(m,1,160)}
-    }else if(m.t==='chief'){
+    }else if((m.m.ai||m.t)==='chief'){
       m.x+=ux*sp*dt;m.y+=uy*sp*dt;m.cd-=dt;m.cd2-=dt;
-      if(m.cd<=0){m.cd=2.4;const a0=Math.atan2(dy,dx);for(let i=-2;i<=2;i++){const a=a0+i*.22;G.es.push({x:m.x,y:m.y-20,vx:Math.cos(a)*200,vy:Math.sin(a)*200,dmg:12*G.dmM,r:7,t:0,life:3,k:'fire'})}}
-      if(m.cd2<=0){m.cd2=4;if(!revive(m,2,240))for(let i=0;i<2;i++)spawn('imp',false,m.x+R(-50,50),m.y+R(-50,50))}
+      if(m.cd<=0){m.cd=2.4;const a0=Math.atan2(dy,dx);for(let i=-2;i<=2;i++){const a=a0+i*.22;G.es.push({x:m.x,y:m.y-20,vx:Math.cos(a)*200,vy:Math.sin(a)*200,dmg:12*G.dmM,r:7,t:0,life:3,k:m.m.pk||'fire'})}}
+      if(m.cd2<=0){m.cd2=4;if(m.m.mn||!revive(m,2,240))for(let i=0;i<2;i++)spawn(m.m.mn||'imp',false,m.x+R(-50,50),m.y+R(-50,50))}
     }else if(m.m.gob){
       m.x+=(mq?ux:-ux)*sp*dt;m.y+=(mq?uy:-uy)*sp*dt;m.life-=dt;if(m.life<=0){m.dead=true;toast('보물 고블린이 도망쳤다')}
     }else{const f=m.flee>0?-1.2:1;m.flee-=dt;m.x+=ux*sp*dt*f;m.y+=uy*sp*dt*f}
@@ -1344,11 +1352,11 @@ function botMove(){
   for(const m of G.mobs){const R0=m.m.boss?a2:m.el?a1:a0,q=dd(P,m);if(q<R0*R0){const d=Math.sqrt(q)||1,w=(R0-d)/R0*(m.m.boss?3:m.el?2:1.5);vx+=(P.x-m.x)/d*w;vy+=(P.y-m.y)/d*w}}
   for(const s of G.es){const q=dd(P,s);if(q<90*90){const d=Math.sqrt(q)||1;vx+=(P.x-s.x)/d*1.2;vy+=(P.y-s.y)/d*1.2}}
   const same=o=>Math.abs((o.s??G.ps)-G.ps)<500;   // 숲 너머 다른 길 구간은 목표에서 제외
-  let goal=null,bd=420*420;for(const l of G.loot){const q=dd(l,P);if(q<(l.k==='gem'?160*160:bd)&&q<bd&&same(l)){bd=q;goal=l}}   // 보석은 가까운 것만(멀리 되돌아가지 않음)
-  for(const s of G.shrines){const q=dd(s,P);if(q<bd*1.5&&same(s)){bd=q;goal=s}}for(const m of G.mobs)if(m.m.gob&&dd(m,P)<500*500&&(!m.q||same(m.q)))goal=m;
-  const pa=G.map.path,nb=nearPath(P.x,P.y),bb=nb.br>=0?pa.brs[nb.br]:pa.brs.find(b=>!b.done&&b.s>G.ps-300&&b.s<G.ps+400);   // 곁가지: 갈림목 → 보물 터 → 갈림목(고블린 추적만 앞섬)
+  const leave=G.exitOpen&&G.area<LAST;let goal=null,bd=420*420;for(const l of G.loot){if(leave&&l.k!=='chestG'&&l.k!=='chest'&&l.k!=='rune')continue;const q=dd(l,P);if(q<(l.k==='gem'?160*160:bd)&&q<bd&&same(l)){bd=q;goal=l}}   // 보석은 가까운 것만(멀리 되돌아가지 않음)
+  if(!leave)for(const s of G.shrines){const q=dd(s,P);if(q<bd*1.5&&same(s)){bd=q;goal=s}}for(const m of G.mobs)if(m.m.gob&&dd(m,P)<500*500&&(!m.q||same(m.q)))goal=m;
+  const pa=G.map.path,nb=nearPath(P.x,P.y),bb=nb.br>=0?pa.brs[nb.br]:leave?null:pa.brs.find(b=>!b.done&&b.s>G.ps-300&&b.s<G.ps+400);   // 곁가지: 갈림목 → 보물 터 → 갈림목(고블린 추적만 앞섬)
   if(bb&&!(goal&&goal.m&&goal.m.gob))goal=bb.done?bb.j:nb.br>=0||dd(P,bb.j)<120*120?bb.end:bb.j;
-  let gw=.9;if(!goal){goal=G.exitOpen&&G.area<2?G.map.exit:pathAt(G.ps+220);let n=0;for(const m of G.mobs)if(dd(m,P)<280*280)n++;if(n>=(window.BOTC??8))gw=.45}   // 붐비면 절반 속도로 정리하며 전진
+  let gw=.9;if(!goal){const bo=!G.exitOpen&&G.mobs.find(m=>m.m.boss&&!m.dead),ex=G.map.exit,es=ex.s??G.ps;goal=bo||(G.exitOpen&&G.area<LAST?(Math.abs(es-G.ps)<200?ex:pathAt(G.ps+Math.sign(es-G.ps)*220)):pathAt(G.ps+220));let n=0;for(const m of G.mobs)if(dd(m,P)<280*280)n++;if(n>=(window.BOTC??8))gw=.45}   // 붐비면 절반 속도로 정리하며 전진
   if(goal){const d=Math.hypot(goal.x-P.x,goal.y-P.y)||1;vx+=(goal.x-P.x)/d*gw;vy+=(goal.y-P.y)/d*gw}
   return[vx,vy];
 }
@@ -1377,7 +1385,8 @@ function botBoss(){const el=awkOpts();applyBoss(el.length?{awk:el[0]}:{uq:pick(O
 
 /* ---------- 한 틱 ---------- */
 function step(dt){
-  const P=G.p;G.t+=dt;G.d=G.t;   // 난이도 시계(적 강화 기준) = 경과 시간(v5와 같음)
+  if(G.portal){G.portal=0;nextArea();return}
+  const P=G.p;G.t+=dt;G.d=G.tut?G.t:diffT();   // 난이도 시계(v14 지역 기준 · 튜토리얼은 경과 시간)
   let mx=0,my=0;
   if(BOT)[mx,my]=botMove();
   else{mx=joy.dx+(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);my=joy.dy+(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)}
@@ -1391,7 +1400,7 @@ function step(dt){
   if(!BOT)revealFog();G.fade=Math.max(0,(G.fade||0)-dt*1.6);
   if(G.over)return;
   if(P.hp<=0){if(!BOT&&!G.tut&&!G.revUsed)openRev();else end(false);return}
-  if(G.exitOpen&&G.area<2&&dd(P,G.map.exit)<42*42){if(G.tut){G.pause='tut';setTimeout(()=>tutDone(false),0);return}nextArea();return}
+  if(G.exitOpen&&G.area<LAST&&dd(P,G.map.exit)<42*42){if(G.tut){G.pause='tut';setTimeout(()=>tutDone(false),0);return}G.portal=1;G.fade=1;return}
   if(BOT){while(G.pend>0){G.pend--;botPick()}while(G.chests>0){G.chests--;botPick(1)}while(G.gch>0){G.gch--;botBoss()}}
   else if(G.gch>0)openBoss();
   else if(G.pend>0||G.chests>0)openPick();
@@ -1467,7 +1476,7 @@ function drawMap(big){
   for(const l of G.loot)if(l.k!=='gem'&&l.k!=='heart'&&seenAt(l.x,l.y))dot(l.x,l.y,l.k==='rune'?colorOf(l.ch).c:l.k==='oil'?'#ffb060':'#f0c060',3);
   for(const mo of G.mobs){if(mo.m.boss)dot(mo.x,mo.y,'#ff4030',5);else if(G.gs.mapEl&&(mo.el||mo.m.gob))dot(mo.x,mo.y,mo.m.gob?'#ffd94a':'#ff8a50',3)}
   dot(G.p.x,G.p.y,'#fff',3);
-  if(big){cx.font=`15px ${FONT}`;cx.textAlign='center';cx.fillStyle='#f0c060';cx.globalAlpha=1;cx.fillText(`지역 ${G.area+1}/3 · ${AREAS[G.area].n}`,W/2,y0-12)}
+  if(big){cx.font=`15px ${FONT}`;cx.textAlign='center';cx.fillStyle='#f0c060';cx.globalAlpha=1;cx.fillText(`지역 ${G.area+1}/${AREAS.length} · ${AREAS[G.area].n}`,W/2,y0-12)}
   cx.restore();
 }
 function shadow(x,y,w){cx.fillStyle='rgba(20,32,12,.24)';const h=Math.max(3,w*.32|0);cx.fillRect(Math.round(x-w),Math.round(y-h/2),Math.round(w*2),h);cx.fillRect(Math.round(x-w*.75),Math.round(y-h/2-1),Math.round(w*1.5),h+2)}
@@ -1504,7 +1513,7 @@ function edgeArrows(camX,camY){
 function drawMob(m,P){
   const M=m.m,z=m.z;let kind=m.flash>0?'w':m.psn>0?'p':m.frz>0?'f':m.el?'el':'n',yb=m.y+M.foot-z;
   if(kind==='n'){if(m.t==='slime'&&(m.ph/2|0)%2)kind='sq';else if(m.t==='bat'&&(m.ph*1.5|0)%2)kind='fl';else if(m.t==='king'&&(m.st==='wind'||(m.ph/3|0)%2))kind='sq'}
-  if(m.t==='king'&&m.st==='wind')pixelRing(m.tx,m.ty,90,'#ff4a3a',.9);
+  if((M.ai||m.t)==='king'&&m.st==='wind')pixelRing(m.tx,m.ty,90,'#ff4a3a',.9);
   shadow(m.x,m.y+M.foot-1,M.sw*(z?.6:1));
   if(M.fly)yb-=6+Math.round(Math.sin(m.ph)*3);else if(m.t!=='slime'&&m.t!=='king')yb-=Math.round(Math.abs(Math.sin(m.ph*.8)));
   const fl=M.gob?P.x>m.x:P.x<m.x,sc=M.sc||1;drawA(cx,M.spr||m.t,m.x,yb,fl,kind,sc);
@@ -1541,7 +1550,7 @@ function draw(){
       else if(l.k==='heart')drawA(cx,'heart',l.x,l.y+6-b);
       else drawA(cx,l.v>=5?'gemB':'gem',l.x,l.y+6-(b>>1))}
     else if(e.m)drawMob(e.m,P);
-    else if(e.ex){const x=e.ex;if(!G.exitOpen)cx.globalAlpha=.55;drawA(cx,'portal',x.x,x.y+20);cx.globalAlpha=1;if(G.exitOpen)pixelRing(x.x,x.y+8,40+Math.sin(G.t*5)*4,'#7ad0ff',.8);label(G.area>=2?'리치의 제단':G.exitOpen?'다음 지역 →':'봉인된 출구',x.x,x.y-70,G.exitOpen?'#9fd8ff':'#a8a8b0')}
+    else if(e.ex){const x=e.ex;if(!G.exitOpen)cx.globalAlpha=.55;drawA(cx,'portal',x.x,x.y+20);cx.globalAlpha=1;if(G.exitOpen)pixelRing(x.x,x.y+8,40+Math.sin(G.t*5)*4,'#7ad0ff',.8);label(G.area>=LAST?'리치의 제단':G.exitOpen?'다음 지역 →':'봉인된 출구',x.x,x.y-70,G.exitOpen?'#9fd8ff':'#a8a8b0')}
     else if(e.s){const s=e.s;shadow(s.x,s.y+6,14);drawA(cx,'shrine',s.x,s.y+8);label(SHR[s.k][0],s.x,s.y-40,'#9fd8ff')}
     else if(e.br){const b=e.br;shadow(b.end.x,b.end.y+8,22);drawA(cx,'camp_crates',b.end.x,b.end.y+10);if(!b.done){drawA(cx,'gemB',b.end.x+18,b.end.y+14);drawA(cx,'gem',b.end.x-16,b.end.y+16);label('보물 터',b.end.x,b.end.y-40,'#ffd94a')}}
     else{shadow(P.x,P.y+12,13);
@@ -1592,7 +1601,7 @@ function updHud(){
   const b=G.mobs.findLast(m=>m.m.boss),A=AREAS[G.area];hud.boss.hidden=false;hud.boss.classList.toggle('seal',!b);
   if(b){hud.bossN.textContent=b.m.n;hud.bossI.style.width=(b.hp/b.mhp*100).toFixed(1)+'%'}
   else if(G.tut){hud.bossN.textContent=`튜토리얼 ${G.tut.s+1}/${TUT.length}`;hud.bossI.style.width=((G.tut.s+1)/TUT.length*100).toFixed(1)+'%'}
-  else{const el=G.t-G.at0;hud.bossN.textContent=G.exitOpen?(G.area<2?'출구가 열렸다 · 포털로':''):A.q?`봉인 · 처치 ${Math.min(G.ak,A.q)}/${A.q}`:`${A.btn} ${fmt(Math.max(0,A.bt-el))}`;
+  else{const el=G.t-G.at0;hud.bossN.textContent=G.exitOpen?(G.area<LAST?'출구가 열렸다 · 포털로':''):A.q?`봉인 · 처치 ${Math.min(G.ak,G.aq)}/${G.aq}`:`${A.btn} ${fmt(Math.max(0,A.bt-el))}`;
     hud.bossI.style.width=(G.exitOpen?100:Math.min(100,A.q?G.ak/A.q*100:el/A.bt*100)).toFixed(1)+'%'}
   $('#charmBtn').classList.toggle('new',tray().length>0);
   const it=nearItem(),ik=it?(it.ch?it.ch.u:it.k)+':'+inBag().length+':'+G.merges+':'+G.oil:'';
@@ -1752,7 +1761,7 @@ $('#bagDone').onclick=()=>{if(G.tut&&G.tut.s===3){if(!G.tut.cleared){toast('보�
 $('#charmBtn').onclick=()=>{if(G&&!G.pause)openBag()};
 
 /* ---------- 일시정지·끝 ---------- */
-function statsHtml(){return`<div><b>${fmt(G.t)}</b><span>시간</span></div><div><b>${G.kills}</b><span>처치</span></div><div><b>${G.lv}</b><span>레벨</span></div><div><b>${G.area+1}/3</b><span>지역</span></div>`}
+function statsHtml(){return`<div><b>${fmt(G.t)}</b><span>시간</span></div><div><b>${G.kills}</b><span>처치</span></div><div><b>${G.lv}</b><span>레벨</span></div><div><b>${G.area+1}/${AREAS.length}</b><span>지역</span></div>`}
 function openPause(){if(!G||G.pause)return;G.pause='pause';$('#pStats').innerHTML=statsHtml();$('#pause').hidden=false}
 function closePause(){$('#pause').hidden=true;resume()}
 $('#pauseBtn').onclick=openPause;$('#resumeBtn').onclick=closePause;
@@ -1774,7 +1783,7 @@ function end(win,quit){
   if(G.tut){G.over=true;setTimeout(()=>tutDone(true),0);return}   // 튜토리얼 중 포기·쓰러짐 = 건너뛰기
   if(G.ended)return;G.ended=true;G.over=true;if(BOT)return;
   const ch=G.ch,rw=runRewards(win,quit),{gold,gems,items,first}=rw;
-  const q0=qDoneN(),a0=achReadyN();track('kills',G.kills);if(win)track('wins');track('lines',G.ins.lines);track('boss',G.bossK||0);track('gob',G.gobK||0);if(G.area>=2)track('area3');track('elite',G.elK||0);track('shrine',G.shrU||0);track('awk',Object.keys(G.awk).length);
+  const q0=qDoneN(),a0=achReadyN();track('kills',G.kills);if(win)track('wins');track('lines',G.ins.lines);track('boss',G.bossK||0);track('gob',G.gobK||0);if(G.area>=LAST)track('area3');track('elite',G.elK||0);track('shrine',G.shrU||0);track('awk',Object.keys(G.awk).length);
   const qN=qDoneN()-q0,aN=achReadyN()-a0;
   const psx=20+20*(G.bossK||0),ps=giveRun(rw,ch,win);lastRw=quit?null:{gold,sc:rw.sc};
   persist();
@@ -1789,14 +1798,14 @@ function end(win,quit){
 }
 // 원정 보상(종료 화면 · 모의 실험 공용). 첫 클리어 = 그 챕터를 처음 깬 판
 function runRewards(win,quit){
-  const ch=G.ch,gold=Math.round(((G.kills*KILL_G+G.t*TIME_G+(win?300:0))*(1+GOLD_CH*(ch-1))+G.runGold)*(G.goldM||1)*(1+(G.gs.goldT||0))*(quit?.5:1));
+  const ch=G.ch,gold=Math.round(((G.kills*KILL_G+G.d*TIME_G+(win?300:0))*(1+GOLD_CH*(ch-1))+G.runGold)*(G.goldM||1)*(1+(G.gs.goldT||0))*(quit?.5:1));
   const first=win&&!(SV.best[ch]&&SV.best[ch].win),items=[];if(win&&Math.random()<WIN_N)items.push(rollGear(T_N));
   return{gold,gems:first?FIRST_GEM:0,items,first,sc:rollSc(Math.round((G.bossK||0)*SC_BOSS))};
 }
 function giveRun(r,ch,win){
   SV.gold+=r.gold;SV.gems+=r.gems;SV.items.push(...r.items);addSc(r.sc);if(r.first&&ch===SV.maxCh&&SV.maxCh<MAXCH){SV.maxCh++;SV.ch=SV.maxCh}
   const prev=SV.best[ch],cur={t:G.t,k:G.kills,win,a:G.area+1};if(!prev||(win&&!prev.win)||(win===!!prev.win&&cur.t>prev.t))SV.best[ch]=cur;
-  return psAdd(20+20*(G.bossK||0));   // 시즌 패스 점수(무료 보상은 모두에게)
+  return psAdd(20+12*(G.bossK||0));   // 시즌 패스 점수(무료 보상은 모두에게)
 }
 $('#endBtn').onclick=()=>{$('#end').hidden=true;G=null;$('#lobby').hidden=false;TAB='run';renderLobby()};
 function start(){
