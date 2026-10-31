@@ -524,7 +524,7 @@ function renderLobby(){
   if(TAB==='run')renderRun();else if(TAB==='gear')renderGear();else if(TAB==='tal')renderTal();else renderShop();
   metaDots();updEnergyUI();
   if(SV.n13){delete SV.n13;persist();openMeta('장비 강화가 바뀌었다',`<div class="note" style="font-size:14px;text-align:left;line-height:1.75">· 등급 이름: 노멀 · 희귀 · 레어 · 유니크 · 신화(이전 일반 · 우수 · 희귀 · 영웅 · 전설)<br>· 강화: 레벨(Lv) → <b>+강화</b>(최대 +25) · 이전 Lv 2단계 = +1, 능력치 그대로<br>· 강화 재료: 금화 + <b>그 부위 주문서</b> · 주문서는 원정 보스 처치로<br>· 등급마다 <b>아이템 스킬</b> 레벨이 오른다(장비 → 장비 누르기)<br><b style="color:var(--gold)">업데이트 선물: 부위별 주문서 5장</b></div>`);return}
-  if(TAB==='run'&&attReady()&&SV.st.runs&&SV.att.shown!==today()){SV.att.shown=today();persist();openAtt()}   // 다시 온 날 첫 로비: 출석 창
+  if(TAB==='run'&&$('#metaOv').hidden&&attReady()&&SV.st.runs&&SV.att.shown!==today()){SV.att.shown=today();persist();openAtt()}   // 다시 온 날 첫 로비: 출석 창(다른 안내 창이 떠 있으면 닫은 뒤)
 }
 function renderRun(){
   const hc=$('#heroCv'),hw=Math.max(160,Math.floor(hc.clientWidth/2));if(hc.clientWidth&&hc.width!==hw){hc.width=hw;hc.height=100}
