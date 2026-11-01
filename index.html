@@ -157,7 +157,7 @@ h3{font-size:15px;color:var(--dim)}
 #bagArea{position:relative;touch-action:none;margin:0 auto}
 .gcell{position:absolute;background:#13100d;box-shadow:inset 0 0 0 2px #2e251b;box-sizing:border-box}
 .ind{position:absolute;width:12px;height:12px;box-shadow:0 0 0 2px #000}
-.clr{position:absolute;background:#fff6c8;pointer-events:none;animation:clr .6s forwards}@keyframes clr{from{opacity:.95}to{opacity:0}}
+.clr{position:absolute;background:#fff6c8;pointer-events:none;animation:clr .6s forwards}.bgo{position:absolute;pointer-events:none;z-index:3;box-shadow:inset 0 0 0 2px #ffd94a,0 0 10px rgba(255,217,74,.45)}@keyframes clr{from{opacity:.95}to{opacity:0}}
 .trayslot{position:absolute;box-shadow:inset 0 0 0 2px #4a3c28;background:#0d0a08}
 .trayl{position:absolute;font-size:11px;color:var(--dim);white-space:nowrap}
 .pc{position:absolute;touch-action:none}
@@ -281,7 +281,7 @@ h3{font-size:15px;color:var(--dim)}
 
 <div class="ov" id="bag" hidden><div class="panel pp">
   <h2>보따리</h2>
-  <p class="note">끌어서 옮기기 · 톡 누르면 회전 · 가로·세로 한 줄을 채우면 지워지며 영구 각인(같은 색 줄 = 룬어)</p>
+  <p class="note">룬은 자동으로 들어감 · 끌어서 옮기기 · 톡 누르면 회전 · 가로·세로 줄을 채우면 빙고(같은 속성 6칸 = 룬어 · 6속성 = 무지개)</p>
   <div id="bagArea"></div>
   <div id="selInfo"></div>
   <div id="trash">여기로 끌면 녹이기 (금화 + 생명력)</div>
@@ -423,14 +423,14 @@ const colorOf=c=>c.col==='wild'?WILD:COLORS[c.col];
 const AFF={warrior:'steel',archer:'bolt',mage:'fire',rogue:'poison'};
 const AWK={fire:'메테오',ice:'얼음 구체',bolt:'번개 폭풍',poison:'시체 폭발',steel:'소용돌이',holy:'천벌'};
 const AWKD={fire:'3초마다 큰 운석이 떨어진다',ice:'느린 얼음 구체가 관통하며 얼린다',bolt:'1.2초마다 낙뢰 3발',poison:'중독된 적이 죽으면 폭발하며 독을 퍼뜨린다',steel:'칼날 반경 1.6배 · 칼날 +3개',holy:'2초마다 빛의 기둥 2발 · 생명력 회복'};
-const UQ={anni:{n:'멸절의 룬',sh:'1',d:'모든 기술 Lv +1'},torch:{n:'지옥불 횃불',sh:'I2',d:'친화 색 기술 Lv +6'},greed:{n:'탐욕의 행운',sh:'I3',d:'경험치 +30% · 금화 +50%'},slime:{n:'왕의 점액',sh:'I2',d:'룬어 판정에서 어느 색으로도 인정'}};
+const UQ={anni:{n:'멸절의 룬',sh:'1',d:'모든 기술 Lv +1'},torch:{n:'지옥불 횃불',sh:'I2',d:'친화 속성 기술 Lv +6'},greed:{n:'탐욕의 행운',sh:'I3',d:'경험치 +30% · 금화 +50%'},slime:{n:'왕의 점액',sh:'I2',d:'룬어 판정에서 어느 속성으로도 인정'}};
 const RW=[1.4,1.7,2,2];   // 칸당 기술 레벨(노멀·희귀·레어·유니크 룬). v11: 룬은 적게·하나는 강하게(이전 1·1.25·1.5·1.5)
 const DIFF=['보통','악몽','지옥'];   // 챕터 1~5 보통 · 6~10 악몽 · 11~15 지옥
 // v12 챕터 15개(15 = 최종). 적 체력·공격 배율: 챕터 1은 초보 보호, 뒤로 갈수록 곱절 — 챕터 15는 신화 풀세트 수준
 const MAXCH=15,CH_HP=[0.7,0.8,2.3,6.7,11,16,21,32,41,47,57,68,76,85,109],CH_DM=[0.7,0.8,1.9,4.4,6.7,8.6,11,15,19,21,24,28,31,34,41];   // v13: 챕터 11 ×1.06 · 12~15 ×1.12(새 장비 체계에서 후반 속도가 v12보다 약 1챕터 빨라 맞춤, 1~10은 그대로)
 // v12 원정 보상: 금화는 챕터당 +GOLD_CH(이전 ×챕터), 일반 클리어 보석 없음(이전 30×챕터), 첫 클리어 = 보석(황금 상자 없음), 클리어 장비 없음 → 보스 장비 드랍(BOSS_GEAR 확률, v16)
 // v14 원정 압축: 난이도 시계(적 강화·출현·정예·성소·룬 등급)는 지역마다 AREA_D씩, 지역 안에서는 길 끝(보스 등장 지점)까지 나아간 만큼(최대 BOSS_K) + 보스 등장 뒤 초당 1(v16) · RUN_HP = 잡몹 체력 [9챕터까지, 10챕터부터](한 판 룬이 적은 만큼) · RT_N = 지역 길 칸 수(0 = 자르지 않음) · BOSS_D = 길 끝까지 이만큼 남으면 보스 등장 · BOSS_AT = 보스 자리(길 끝에서) · BOSS_GEAR = 보스 장비 드랍 확률 · LIGHT_B = 빛 반경 기본 · SC_BOSS 보스 5마리 × 1.2장 = v13 한 판 6장
-const GOLD_CH=0.15,FIRST_GEM=50,KILL_G=0.47,TIME_G=0.5,SC_BOSS=1.2,SC_START=5,AREA_D=90,RUN_HP=[0.91,0.858],RT_N=5,BOSS_D=700,BOSS_AT=230,BOSS_GEAR=0.1,LIGHT_B=170,SP_AHEAD=0.45,MAG_R=600,BOSS_K=45;   // 금화 = (처치×KILL_G + 난이도 시계(초)×TIME_G + 클리어 300) × (1 + GOLD_CH×(챕터-1))
+const GOLD_CH=0.15,FIRST_GEM=50,KILL_G=0.47,TIME_G=0.5,SC_BOSS=1.2,SC_START=5,AREA_D=90,RUN_HP=[0.91,0.858],RT_N=5,BOSS_D=700,BOSS_AT=230,BOSS_GEAR=0.1,LIGHT_B=170,SP_AHEAD=0.45,MAG_R=600,BOSS_K=45,BINGO_HP=0.05,REV_T=1.5,ASP_MAX=60,ROGUE_CR=0.2,BINGO_DM=0.03,BINGO_MH=6.0,BINGO_SP=0.02;   // 금화 = (처치×KILL_G + 난이도 시계(초)×TIME_G + 클리어 300) × (1 + GOLD_CH×(챕터-1))
 const LINE={fire:'화염구 +1발 · 폭발 범위 +40% · 화상',ice:'적중 시 20% 확률 빙결',bolt:'연쇄 +2 · 번개 피해 +25%',poison:'독 늪 +1개 · 독 피해 +25%',steel:'칼날 +2개 · 칼날 피해 +25%',holy:'망치 +1개 · 초당 생명력 +1.5'};
 const GRID=6;
 // 룬 모양 1~5칸 21종(회전만, 뒤집기 없음). w = 출현 가중(합 100): 1칸 12 · 2칸 22 · 3칸 26 · 4칸 24 · 5칸 16(v11: 큰 모양 비중 ↑, 이전 30·28·20·14·8), 같은 크기끼리 나눔
@@ -442,7 +442,8 @@ const CSH=Object.fromEntries(Object.entries({
   T5:[[0,0],[1,0],[2,0],[1,1],[1,2]],U5:[[0,0],[2,0],[0,1],[1,1],[2,1]],V5:[[0,0],[0,1],[0,2],[1,2],[2,2]],X5:[[1,0],[0,1],[1,1],[2,1],[1,2]],Y5:[[1,0],[0,1],[1,1],[1,2],[1,3]],
 }).map(([k,c])=>[k,{n:SZN[c.length],c,w:[0,12,22,26,24,16][c.length]/[0,1,1,2,7,10][c.length]}]));
 const ncell=c=>(c.cc||CSH[c.sh].c).length;   // 조각(cc)은 남은 칸 목록
-const CSTAT={atk:['공격력 +%v%',3],hp:['최대 생명력 +%v',10],spd:['이동 속도 +%v%',2],crit:['치명타 +%v%',2],cdr:['재사용 대기 -%v%',2],light:['시야 +%v%',3]};
+const CSTAT={ls:['피흡 %v%',0.3],aspd:['공격 속도 +%v%',2],sdmg:['기술 피해 +%v%',2],crit:['치명타 +%v%',1.5],cdr:['재사용 대기 -%v%',1.5],luck:['아이템 확률 +%v%',4]};   // v17 칸당(노멀) · 속성마다 1개 고정
+const COPT={steel:'ls',bolt:'aspd',fire:'sdmg',poison:'crit',ice:'cdr',holy:'luck'},optV=(st,n,r)=>Math.round(CSTAT[st][1]*n*CRAR[r].m*10)/10;
 const CRAR=[{n:'',m:1,c:'#e8e4da'},{n:'희귀 ',m:1.5,c:'#8aa2ff'},{n:'레어 ',m:2,c:'#f0dc6a'},{n:'',m:2,c:'#ffb340'}];
 const MT={
   slime:{n:'슬라임',hp:18,sp:55,r:12,dmg:9,xp:1,foot:11,sw:13,pc:'#6ccf4f'},
@@ -574,8 +575,8 @@ function renderRun(){
 const TUT=[
   {t:'화면 아무 곳이나 <b>끌어서 이동</b>한다 · 길을 따라 앞으로 가 보자'},
   {t:'공격은 <b>자동</b>이다 · 적을 처치하고 <b>파란 보석</b>을 주워 레벨을 올리자'},
-  {t:'레벨이 오르면 <b>룬</b>을 하나 고른다 · 룬은 보따리에 들어가 <b>기술</b>이 된다(색 = 기술, 칸 수 = 레벨)',low:1},
-  {t:'보관함의 룬을 <b>빛나는 빈칸으로 끌어</b> 한 줄을 채워 보자 · 꽉 찬 줄은 지워진다',low:1},
+  {t:'레벨이 오르면 <b>룬</b>을 하나 고른다 · 룬은 보따리에 들어가 <b>기술</b>이 된다(속성 = 기술 + 옵션, 칸 수 = 레벨)',low:1},
+  {t:'보관함의 룬을 <b>빛나는 빈칸으로 끌어</b> 한 줄을 채워 보자 · 꽉 찬 줄 = <b>빙고</b>(지워지지 않고 효과 유지)',low:1},
   {t:'어둠 속 <b>빨간 눈</b>이 적이다 · <b>빛 밖의 적은 공격이 닿지 않는다</b> · <b>등불 기름</b>으로 빛을 넓히자'},
   {t:'<b>보스</b>가 길을 막는다 · 처치하면 <b>주변 보석이 끌려오고</b> 출구가 열린다'},
   {t:'출구가 열렸다 · <b>포털</b>로 들어가면 다음 지역(원정은 5지역, 마지막은 리치)'},
@@ -586,8 +587,8 @@ function tutGo(s){
   if(s===1){for(let i=0;i<8;i++){const q=pathAt(G.ps+260+i*18);spawn('slime',false,q.x+R(-50,50),q.y+R(-50,50))}G.next=Math.min(G.next,6)}
   if(s===3){   // 빈 줄에 5색 룬 + 보관함에 신성 룬 1개 → 끌어 놓으면 무지개 줄
     const g=gridCols();let y=0;for(let r=GRID-1;r>=0;r--)if(g.slice(r*GRID,r*GRID+GRID).every(v=>!v)){y=r;break}
-    G.charms=G.charms.filter(c=>c.in);['fire','ice','bolt','poison','steel'].forEach((c,x)=>G.charms.push({u:++uid,col:c,sh:'1',rot:0,x,y,in:true,r:0,st:'atk',v:3}));
-    G.charms.push({u:++uid,col:'holy',sh:'1',rot:0,x:0,y:0,in:false,r:0,st:'hp',v:10});T.row=y;T.l0=G.ins.lines;T.cleared=0;rebuildRun();openBag();
+    G.charms=G.charms.filter(c=>c.in);['fire','ice','bolt','poison','steel'].forEach((c,x)=>G.charms.push({u:++uid,col:c,sh:'1',rot:0,x,y,in:true,r:0,st:COPT[c],v:optV(COPT[c],1,0)}));
+    G.charms.push({u:++uid,col:'holy',sh:'1',rot:0,x:0,y:0,in:false,r:0,st:COPT.holy,v:optV(COPT.holy,1,0)});T.row=y;T.l0=G.ins.lines;T.cleared=0;rebuildRun();openBag();
   }
   if(s===4){const q=pathAt(G.ps+260);G.loot.push({k:'oil',x:q.x,y:q.y,s:q.s});for(let i=0;i<6;i++){const b=pathAt(G.ps+650+i*24);spawn('bat',false,b.x+R(-50,50),b.y+R(-50,50))}}   // 빛 밖에서 다가오는 빨간 눈
   if(s===5){bossAhead(AREAS[0],560);const b=G.mobs.find(m=>m.m.boss);if(b)b.hp=b.mhp=b.mhp*.4}   // 연습용 보스: 체력 40%
@@ -608,7 +609,7 @@ function tutDone(skip){
   const first=!SV.tutDone;SV.tutDone=1;if(first&&!skip)SV.gems+=50;persist();
   for(const id of['coach','joyHint','hud','bag','pick'])$('#'+id).hidden=true;
   G=null;$('#lobby').hidden=false;TAB='run';renderLobby();
-  openMeta(skip?'튜토리얼 건너뜀':'튜토리얼 완료!',`<div class="note" style="font-size:14px;text-align:left;line-height:1.75">· 끌어서 이동, 공격은 자동<br>· 레벨업 → 룬 고르기 → 보따리에 들어가 기술이 됨<br>· 가로·세로 한 줄을 채우면 지워지며 영구 각인(같은 색 = 룬어, 6색 = 무지개)<br>· 어둠 속 빨간 눈 = 적 · 빛 밖의 적은 공격 안 닿음(보스 제외) · 등불 기름 = 시야<br>· 길 끝 보스 → 처치하면 남은 적이 흩어지고 주변 보석 자석 + 포털 → 다음 지역(5지역) · 보스는 주문서 · 장비를 떨어뜨림<br>· 곁가지 끝 보물 터 = 보물 고블린 · 오른쪽 위 지도를 누르면 전체 지도<br>· 튜토리얼은 원정 화면 아래 버튼으로 다시 할 수 있다${first&&!skip?'<br><b style="color:var(--gold)">보상: 보석 50</b>':''}</div>`);
+  openMeta(skip?'튜토리얼 건너뜀':'튜토리얼 완료!',`<div class="note" style="font-size:14px;text-align:left;line-height:1.75">· 끌어서 이동, 공격은 자동<br>· 레벨업 → 룬 고르기 → 보따리에 들어가 기술이 됨<br>· 가로·세로 줄을 채우면 빙고(줄마다 피해 +3% · 최대 생명력 +6 · 이동 속도 +2% · 같은 속성 = 룬어 · 6속성 = 무지개)<br>· 어둠 속 빨간 눈 = 적 · 빛 밖의 적은 공격 안 닿음(보스 · 보물 고블린 · 방금 쏜 적 제외) · 등불 기름 = 시야<br>· 길 끝 보스 → 처치하면 남은 적이 흩어지고 주변 보석 자석 + 포털 → 다음 지역(5지역) · 보스는 주문서 · 장비를 떨어뜨림<br>· 곁가지 끝 보물 터 = 보물 고블린 · 오른쪽 위 지도를 누르면 전체 지도<br>· 튜토리얼은 원정 화면 아래 버튼으로 다시 할 수 있다${first&&!skip?'<br><b style="color:var(--gold)">보상: 보석 50</b>':''}</div>`);
 }
 $('#coachNext').onclick=()=>{if(G&&G.tut&&G.tut.s===3&&G.tut.cleared){$('#bag').hidden=true;resume();tutGo(4)}};
 $('#coachSkip').onclick=()=>{if(G&&G.tut)tutDone(true)};
@@ -683,7 +684,7 @@ $('#bPass').onclick=openPass;
 function openMeta(title,html){$('#metaT').textContent=title;$('#metaB').innerHTML=html;$('#metaOv').hidden=false}
 $('#metaOk').onclick=()=>{$('#metaOv').hidden=true;renderLobby()};
 // 일일 퀘스트: 날짜 고정 무작위 5개, 하나당 활동 점수 20 → 활동 상자 20·40·60·80·100
-const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:12,n:'룬 줄 지우기',r:{gems:5}},{k:'boss',g:5,n:'보스 처치',r:{gems:5}},
+const QPOOL=[{k:'runs',g:2,n:'원정 출발',r:{gold:300}},{k:'kills',g:600,n:'적 처치',r:{gold:300}},{k:'lines',g:12,n:'빙고 줄 완성',r:{gems:5}},{k:'boss',g:5,n:'보스 처치',r:{gems:5}},
   {k:'gob',g:1,n:'보물 고블린 처치',r:{gold:500}},{k:'area3',g:1,n:'지역 5 도달',r:{gems:5}},{k:'up',g:2,n:'장비 강화',r:{gold:300}},{k:'chest',g:1,n:'상점 상자 열기',r:{gold:200}},
   {k:'elite',g:5,n:'정예 처치',r:{gold:300}},{k:'shrine',g:3,n:'성소 사용',r:{gold:300}},{k:'awk',g:1,n:'각성',r:{gems:5}}];
 const QPTS=20,QBOX=[[20,{gold:500}],[40,{energy:10}],[60,{gems:10}],[80,{chest:'N'}],[100,{gems:20}]];
@@ -707,7 +708,7 @@ function openQuest(){
   for(const b of $$('#metaB [data-b]'))b.onclick=()=>{const j=+b.dataset.b;if(d.box.includes(j)||d.act<QBOX[j][0])return;d.box.push(j);const g=grant(QBOX[j][1]);if(g.items.length)popup('활동 상자',g.items,g.text);else toast(`활동 상자 · ${g.text}`);openQuest()};
 }
 // 업적: 누적 기록 단계형, 단계마다 보석
-const ACH=[{id:'runs',n:'원정 횟수',t:[5,20,50,100]},{id:'kills',n:'누적 처치',t:[840,4200,21000,84000]},{id:'wins',n:'원정 성공',t:[1,5,20,50]},{id:'lines',n:'룬 줄 지우기',t:[21,130,640,2100]},
+const ACH=[{id:'runs',n:'원정 횟수',t:[5,20,50,100]},{id:'kills',n:'누적 처치',t:[840,4200,21000,84000]},{id:'wins',n:'원정 성공',t:[1,5,20,50]},{id:'lines',n:'빙고 줄 완성',t:[21,130,640,2100]},
   {id:'gob',n:'보물 고블린 처치',t:[4,18,73,220]},{id:'boss',n:'보스 처치',t:[14,68,270,810]},{id:'awk',n:'각성',t:[4,21,70,210]},{id:'ch',n:'챕터 열기',t:[3,6,10,15],v:()=>SV.maxCh,f:v=>`챕터 ${v}`},
   {id:'grade',n:'장비 등급',t:[1,2,3,4],v:()=>Math.max(0,...SV.items.map(i=>i.g)),f:v=>`${GRADES[v].n} 장비`},{id:'tal',n:'재능 강화',t:[5,20,50,80],v:()=>SV.tal.n}];
 const ACH_R=[10,20,40,80];
@@ -868,11 +869,11 @@ let G=null,uid=0;
 function newRun(cls,ch,sv=SV,tut=false){
   const gs=gearStats(cls,sv),act=actOf(ch);AREAS=act.a;
   G={cls,ch,gs,t:0,d:0,acc:0,nextPack:40,b1:0,b2:0,kingK:0,area:0,areaT:[0],bossTs:[],oil:0,lightM:1,bigMap:false,kills:0,lv:1,xp:0,next:xpNeed(1),pend:0,chests:0,over:false,win:false,pause:null,shake:0,hurtT:0,
-    charms:[],ins:{L:{},s:{},same:{},rainbow:0,full:0,uq:{},lines:0,cells:0},sel:null,cdt:{},orb:[],hm:new Map(),hams:[],awk:{},buf:{},shrines:[],corpses:[],nextShrine:75,runGold:0,gch:0,merges:0,melts:0,xpM:1,goldM:1,p:{x:AW/2,y:AW/2,face:1,inv:0,hp:0,maxhp:0,wt:0},mobs:[],shots:[],es:[],loot:[],fx:[],parts:[],texts:[],pools:[],dl:{},
+    charms:[],ins:{lines:0},bseen:new Set(),lsA:0,sel:null,cdt:{},orb:[],hm:new Map(),hams:[],awk:{},buf:{},shrines:[],corpses:[],nextShrine:75,runGold:0,gch:0,merges:0,melts:0,xpM:1,goldM:1,p:{x:AW/2,y:AW/2,face:1,inv:0,hp:0,maxhp:0,wt:0},mobs:[],shots:[],es:[],loot:[],fx:[],parts:[],texts:[],pools:[],dl:{},
     runItems:[],scGot:{},hpM:CH_HP[ch-1]*act.hp,dmM:CH_DM[ch-1]*act.dm,spM:1+.25*(ch-1),map:null,ro:act.r,hz:[]};
   if(tut){G.tut={s:0,t:0,l0:0,row:0,cleared:0};G.dmM=.4}   // 튜토리얼: 적 피해 40%
   enterArea(0);
-  G.charms.push({u:++uid,col:AFF[cls],sh:'1',rot:0,x:0,y:GRID-1,in:true,r:0,st:'atk',v:3});
+  G.charms.push({u:++uid,col:AFF[cls],sh:'1',rot:0,x:0,y:GRID-1,in:true,r:0,st:COPT[AFF[cls]],v:optV(COPT[AFF[cls]],1,0)});
   rebuildRun();G.p.hp=G.p.maxhp;if(!tut)for(let i=0;i<8;i++){const q=pathAt(G.ps+300+i*22);spawn(i%2?'bat':'slime',false,q.x+R(-50,50),q.y+R(-50,50))}
 }
 const xpNeed=l=>Math.round((5+l*3+l*l*2)*2.0);   // v11: 2차 계수 .6 → 2 · v14: ×1.2(한 판 레벨업 9~11번)
@@ -1017,8 +1018,8 @@ function makeCharm(minR=0){
   let s=Math.random()*100,sh='1';for(const k in CSH){s-=CSH[k].w;if(s<=0){sh=k;break}}
   const owned=inBag().filter(c=>c.col!=='wild'&&!c.uq).map(c=>c.col),col=owned.length&&Math.random()<.35?pick(owned):pick(Object.keys(COLORS));
   const rr=Math.random(),r=Math.max(minR,G.d>200&&rr<.25?2:rr<.5+G.d/1200?1:0);   // v11: 룬은 적게·하나는 강하게(희귀 .15 → .25, 마법 .35 → .5)
-  const st=pick(Object.keys(CSTAT)),n=CSH[sh].c.length;
-  return{u:++uid,col,sh,rot:0,x:0,y:0,in:false,r,st,v:Math.round(CSTAT[st][1]*n*CRAR[r].m)};
+  const st=COPT[col],n=CSH[sh].c.length;
+  return{u:++uid,col,sh,rot:0,x:0,y:0,in:false,r,st,v:optV(st,n,r)};
 }
 const charmName=c=>c.uq?UQ[c.uq].n:`${CRAR[c.r].n}${c.cc?'':CSH[c.sh].n+' '}${COLORS[c.col].n} 룬${c.cc?' 조각':''}`;
 const charmStat=c=>c.uq?UQ[c.uq].d:CSTAT[c.st][0].replace('%v',c.v);
@@ -1039,35 +1040,25 @@ function pieces(cs){
     out.push(part)}
   return out;
 }
-// 줄 지우기(각인): 가로·세로 한 줄이 꽉 차면 그 칸들의 힘(기술 레벨·능력치)을 영웅에게 영구로 남기고 칸을 비운다.
-// 줄에 걸친 룬은 줄 안 칸만 사라지고 남은 칸은 이어진 조각끼리 나뉨(능력치는 칸 수 비례). 고유 룬은 효과째 각인
-function clearLines(){
-  const own=new Map();for(const c of inBag())for(const[x,y]of cellsOf(c))own.set(y*GRID+x,c);
-  const lines=[];for(let i=0;i<GRID;i++){const r=[],c=[];for(let j=0;j<GRID;j++){r.push(i*GRID+j);c.push(j*GRID+i)}for(const l of[r,c])if(l.every(k=>own.has(k)))lines.push(l)}
-  if(!lines.length)return null;
-  const I=G.ins,cut=new Set(),types=lines.map(l=>lineType(l.map(k=>own.get(k).col)));
-  for(const t of types)if(t==='rainbow')I.rainbow++;else if(t==='full')I.full++;else if(t!=='wild')I.same[t]=(I.same[t]||0)+1;
-  for(const l of lines)for(const k of l)cut.add(k);
-  for(const c of new Set([...cut].map(k=>own.get(k)))){
-    const cells=cellsOf(c),n=cells.length,keep=c.uq?[]:cells.filter(([x,y])=>!cut.has(y*GRID+x)),gone=n-keep.length;
-    G.charms.splice(G.charms.indexOf(c),1);if(G.sel===c)G.sel=null;
-    if(c.uq)I.uq[c.uq]=1;
-    if(c.col!=='wild')I.L[c.col]=(I.L[c.col]||0)+gone*RW[c.r];
-    if(!c.uq)I.s[c.st]=(I.s[c.st]||0)+c.v*gone/n;
-    for(const part of pieces(keep)){const mx=Math.min(...part.map(p=>p[0])),my=Math.min(...part.map(p=>p[1]));
-      G.charms.push({...c,u:++uid,cc:part.map(([x,y])=>[x-mx,y-my]),rot:0,x:mx,y:my,v:Math.round(c.v*part.length/n)})}
+// v17 빙고: 가로·세로 줄이 꽉 차면 지우지 않고 그대로 둔다 — 채워져 있는 동안 효과(줄마다 피해 BINGO_DM · 최대 생명력 BINGO_MH · 이동 속도 BINGO_SP · 같은 속성 줄 = 룬어 · 6속성 줄 = 무지개)
+// 줄이 판에서 처음 완성되면 생명력 BINGO_HP 회복(같은 줄은 판당 1번) · 룬을 빼면 그 줄 효과만 꺼짐
+function bingo(){
+  const g=gridCols(),li={same:{},rainbow:0,full:0,on:[]},nw=[];
+  for(let i=0;i<GRID;i++)for(const[id,ks]of[['r'+i,Array.from({length:GRID},(_,j)=>i*GRID+j)],['c'+i,Array.from({length:GRID},(_,j)=>j*GRID+i)]]){
+    if(!ks.every(k=>g[k]))continue;const t=lineType(ks.map(k=>g[k]));li.full++;li.on.push(id);
+    if(t==='rainbow')li.rainbow++;else if(t!=='full')li.same[t]=(li.same[t]||0)+1;
+    if(!G.bseen.has(id)){G.bseen.add(id);nw.push([ks,t])}
   }
-  I.lines+=lines.length;I.cells+=cut.size;G.flash=G.pause==='bag'?cut:null;
-  const heal=lines.length>1?.08*lines.length:0;if(heal)G.p.hp=Math.min(G.p.maxhp,G.p.hp+G.p.maxhp*heal);
-  if(!BOT){const nm=t=>t==='rainbow'?'무지개':t==='full'?'꽉 찬 줄':t==='wild'?'만능 줄':COLORS[t].n+' 룬어';
-    toast(`<b style="color:#ffd94a">줄 지움 ×${lines.length}</b> · ${types.map(nm).join(' · ')} 각인${heal?` · 생명력 +${Math.round(heal*100)}%`:''}`);
-    G.fx.push({k:'ring',x:G.p.x,y:G.p.y,r:110,t:0,life:.5,c:'#ffd94a'});sfx('chest')}
-  return{n:lines.length,types};
+  if(nw.length){G.ins.lines+=nw.length;G.p.hp=Math.min(G.p.maxhp,G.p.hp+G.p.maxhp*BINGO_HP*nw.length);
+    if(G.pause==='bag')G.flash=new Set(nw.flatMap(v=>v[0]));
+    if(!BOT){const nm=t=>t==='rainbow'?'무지개':t==='full'?'빙고':COLORS[t].n+' 룬어';
+      toast(`<b style="color:#ffd94a">빙고! ×${nw.length}</b> · ${nw.map(v=>nm(v[1])).join(' · ')} · 생명력 +${Math.round(BINGO_HP*nw.length*100)}%`);
+      G.fx.push({k:'ring',x:G.p.x,y:G.p.y,r:110,t:0,life:.5,c:'#ffd94a'});sfx('chest')}}
+  return li;
 }
 function rebuildRun(){
-  clearLines();
-  const P=G.p,C=CLASSES[G.cls],gs=G.gs,I=G.ins,s={atk:0,hp:0,spd:0,crit:0,cdr:0,light:0},L={...I.L};let anni=I.uq.anni?1:0,torch=I.uq.torch?6:0;G.xpM=I.uq.greed?1.3:1;G.goldM=I.uq.greed?1.5:1;
-  for(const k in I.s)s[k]+=I.s[k];
+  const bl=bingo();
+  const P=G.p,C=CLASSES[G.cls],gs=G.gs,s={ls:0,aspd:0,sdmg:0,crit:0,cdr:0,luck:0},L={};let anni=0,torch=0;G.xpM=1;G.goldM=1;
   for(const c of inBag()){
     if(c.uq==='anni')anni=1;else if(c.uq==='torch')torch=6;else if(c.uq==='greed'){G.xpM=1.3;G.goldM=1.5}
     if(!c.uq)s[c.st]+=c.v;
@@ -1075,24 +1066,29 @@ function rebuildRun(){
   }
   const aff=AFF[G.cls];if(torch)L[aff]=(L[aff]||0)+torch;
   if(anni)for(const k in L)L[k]+=1;
-  G.sk=L;G.li={same:I.same,rainbow:I.rainbow,full:I.full,...lineHint(gridCols())};const li=G.li;
-  P.dmgM=1+s.atk/100+.03*Math.min(FULLMAX,li.full);P.atk=gs.atk;
-  const old=P.maxhp;P.maxhp=Math.round(C.hp+gs.hp+s.hp);P.hp=Math.min(P.maxhp,P.hp+Math.max(0,P.maxhp-old));
-  P.spd=C.spd*Math.min(1.3,1+(gs.spd+s.spd)/100);
-  P.crit=Math.min(.9,(gs.crit+s.crit)/100+(G.cls==='rogue'?.2:0));
+  G.sk=L;G.opt=s;G.li={...bl,...lineHint(gridCols())};const li=G.li;
+  P.dmgM=1+BINGO_DM*Math.min(FULLMAX,li.full);P.atk=gs.atk;
+  const old=P.maxhp;P.maxhp=Math.round(C.hp+gs.hp+BINGO_MH*li.full);P.hp=Math.min(P.maxhp,P.hp+Math.max(0,P.maxhp-old));
+  P.spd=C.spd*Math.min(1.3,1+gs.spd/100+BINGO_SP*li.full);
+  P.crit=Math.min(.9,(gs.crit+s.crit)/100+(G.cls==='rogue'?ROGUE_CR:0));
   P.cdm=Math.max(.4,(1-s.cdr/100)*(1-(gs.cdr||0)/100)*(1-.1*Math.min(3,li.rainbow)));P.pick=75*(1+(gs.pick||0)/100);G.xpM*=1+(gs.xp||0)/100;
+  P.ls=s.ls/100;P.aspdM=1/(1+Math.min(ASP_MAX,s.aspd)/100);P.sdmM=1+s.sdmg/100;G.luck=Math.min(1,s.luck/100);   // v17 속성 옵션(피흡 · 공속 · 기술 피해 · 아이템 확률)
   P.regen=L.holy?1.5*tier('holy'):0;
   P.dr=gs.dr+(G.cls==='warrior'?.1:0);
-  G.runLight=Math.min(40,s.light+6*(G.oil||0));G.lightM=Math.min(1.8,1+(G.runLight+gs.light)/100);   // 판 안(룬·기름) 최대 +40%, 등불 장비는 그 위에, 전체 1.8배
+  G.runLight=Math.min(40,6*(G.oil||0));G.lightM=Math.min(1.8,1+(G.runLight+gs.light)/100);   // 판 안(기름) 최대 +40%, 등불 장비는 그 위에, 전체 1.8배(v17 룬 시야 없음)
 }
 const pw=()=>G.p.atk/20*G.p.dmgM*(1+.03*(G.lv-1))*(G.buf.rage>0?1.5:1);
 // 룬 획득: 자리 있으면 장착 → 없으면 같은 색 합성(호라드릭) → 그것도 없으면 녹이기(고유 룬은 보관함)
 function mergeTarget(ch){if(ch.uq)return null;return inBag().filter(o=>o.col===ch.col&&!o.uq&&o.r<2).sort((a,b)=>a.r-b.r||ncell(b)-ncell(a))[0]||null}
-function doMerge(o,ch){o.r=Math.min(2,Math.max(o.r+1,ch.r));o.v=Math.round(CSTAT[o.st][1]*ncell(o)*CRAR[o.r].m);G.merges++}
+function doMerge(o,ch){o.r=Math.min(2,Math.max(o.r+1,ch.r));o.v=optV(o.st,ncell(o),o.r);G.merges++}
 const MELT_HP=.04,SKIP_HP=.05;
 function melt(){G.runGold+=20*G.ch;G.p.hp=Math.min(G.p.maxhp,G.p.hp+G.p.maxhp*MELT_HP);G.melts++}
-function linesIf(ch,sp){[ch.x,ch.y,ch.rot]=sp;ch.in=true;G.charms.push(ch);const g=gridCols();G.charms.pop();ch.in=false;let n=0;for(let i=0;i<GRID;i++){let r=1,c=1;for(let j=0;j<GRID;j++){if(!g[i*GRID+j])r=0;if(!g[j*GRID+i])c=0}n+=r+c}return n}
-function planFor(ch){const sp=bestSpot(ch);if(sp)return{a:'place',sp,n:linesIf(ch,sp)};const t=mergeTarget(ch);if(t)return{a:'merge',t};return{a:ch.uq?'tray':'melt'}}
+const fullN=g=>{let n=0;for(let i=0;i<GRID;i++){let r=1,c=1;for(let j=0;j<GRID;j++){if(!g[i*GRID+j])r=0;if(!g[j*GRID+i])c=0}n+=r+c}return n};
+// v17 놓으면 새로 완성되는 빙고 줄 수 n · 그 룬이 걸친 미완성 줄 중 가장 많이 찬 줄 pg(찬 칸 f, 모두 같은 속성 same)
+function linesIf(ch,sp){const n0=fullN(gridCols());[ch.x,ch.y,ch.rot]=sp;ch.in=true;G.charms.push(ch);const g=gridCols(),cs=cellsOf(ch);G.charms.pop();ch.in=false;let pg=null;
+  for(const id of new Set(cs.flatMap(([x,y])=>['c'+x,'r'+y]))){const i=+id.slice(1),l=Array.from({length:GRID},(_,j)=>id[0]==='r'?g[i*GRID+j]:g[j*GRID+i]).filter(Boolean);if(l.length<GRID&&(!pg||l.length>pg.f))pg={f:l.length,same:l.every(v=>v===ch.col||v==='wild')}}
+  return{n:fullN(g)-n0,pg}}
+function planFor(ch){const sp=bestSpot(ch);if(sp){const q=linesIf(ch,sp);return{a:'place',sp,n:q.n,pg:q.pg}}const t=mergeTarget(ch);if(t)return{a:'merge',t};return{a:ch.uq?'tray':'melt'}}
 function acquire(ch,p=planFor(ch)){
   if(p.a==='place'){[ch.x,ch.y,ch.rot]=p.sp;ch.in=true;G.charms.push(ch)}
   else if(p.a==='merge')doMerge(p.t,ch);
@@ -1100,7 +1096,7 @@ function acquire(ch,p=planFor(ch)){
   else melt();
   rebuildRun();return p;
 }
-function planText(ch,p){return p.a==='place'?'장착'+(p.n?` · ${p.n}줄 지움`:''):p.a==='merge'?`합성 → ${charmName(p.t)} 등급 상승`:p.a==='tray'?'예비 보관함으로':`녹이기 · 금화 +${20*G.ch} · 생명력 ${MELT_HP*100}%`}
+function planText(ch,p){return p.a==='place'?'장착'+(p.n?` · 빙고 ${p.n}줄!`:p.pg?` · ${p.pg.same?colorOf(ch).n+' ':''}줄 ${p.pg.f}/${GRID}`:''):p.a==='merge'?`합성 → ${charmName(p.t)} 등급 상승`:p.a==='tray'?'예비 보관함으로':`녹이기 · 금화 +${20*G.ch} · 생명력 ${MELT_HP*100}%`}
 function acquireToast(ch,p){toast(`<span style="color:${CRAR[ch.r].c}">${charmName(ch)}</span> ${p.a==='place'?'장착':p.a==='merge'?'합성':p.a==='tray'?'보관':'녹임'}`)}
 
 /* ---------- 입력 ---------- */
@@ -1126,7 +1122,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.over
 
 /* ---------- 전투 ---------- */
 // v16: 자동 공격은 빛 안의 적만 조준(보스는 어둠 속에서도) — 날아간 화살 · 폭발이 어둠 속 적을 맞히는 건 그대로
-const lit=(m,P,lr)=>m.m.boss||(m.x-P.x)**2+(m.y-P.y)**2<(lr+m.r)**2;
+const lit=(m,P,lr)=>m.m.boss||m.m.gob||m.rev>G.t||(m.x-P.x)**2+(m.y-P.y)**2<(lr+m.r)**2;
 function nearest(x,y,maxd,ex){const P=G.p,lr=lightR();let b=null,bd=maxd*maxd;for(const m of G.mobs){if(m.dead||(ex&&ex.has(m))||!lit(m,P,lr))continue;const d=(m.x-x)**2+(m.y-y)**2;if(d<bd){bd=d;b=m}}return b}
 function nearestN(x,y,n,maxd){const P=G.p,lr=lightR(),a=[];for(const m of G.mobs){if(m.dead||!lit(m,P,lr))continue;const d=(m.x-x)**2+(m.y-y)**2;if(d<maxd*maxd)a.push([d,m])}return a.sort((u,v)=>u[0]-v[0]).slice(0,n).map(v=>v[1])}
 function shot(o){const P=G.p;G.shots.push({...o,x:P.x,y:P.y-6,vx:Math.cos(o.a)*o.sp,vy:Math.sin(o.a)*o.sp,t:0})}
@@ -1156,8 +1152,8 @@ function fireWeapon(){
   }
   return false;
 }
-const lvM=L=>1+.07*(Math.min(L,24)-1)+.02*Math.max(0,L-24);
-const tier=col=>{const n=G.li.same[col]||0;return n>=3?2:n?1:0};
+const lvM=L=>(1+.07*(Math.min(L,24)-1)+.02*Math.max(0,L-24))*(G.p.sdmM||1);   // v17 × 기술 피해(화염 룬)
+const tier=col=>{const n=G.li.same[col]||0;return n>=2?2:n?1:0};
 function fireSkill(col,L){
   const P=G.p,dm=pw(),ln=tier(col);
   switch(col){
@@ -1191,7 +1187,7 @@ function fireT(k,dt,cd){G.cdt[k]=(G.cdt[k]??0)-dt;if(G.cdt[k]<=0){G.cdt[k]=cd;re
 const SKCD={fire:1.5,ice:2.6,bolt:1.5,poison:2.6,holy:2.4};
 function updSkills(dt){
   const P=G.p;
-  if(fireT('w',dt,CD[CLASSES[G.cls].w]*G.gs.aspd)&&!fireWeapon())G.cdt.w=.15;
+  if(fireT('w',dt,CD[CLASSES[G.cls].w]*G.gs.aspd*(G.p.aspdM||1))&&!fireWeapon())G.cdt.w=.15;
   for(const col in G.sk){if(col!=='steel'&&fireT(col,dt,SKCD[col]*P.cdm)&&!fireSkill(col,G.sk[col]))G.cdt[col]=.15}
   const L=G.sk.steel||0;G.orb=[];
   if(L){
@@ -1224,6 +1220,7 @@ function hit(o,dmg,el){
 }
 function hurt(o,dmg,crit,el){
   if(o.dead)return;
+  if(G.p.ls)G.lsA+=Math.min(dmg,Math.max(0,o.hp))*G.p.ls;   // v17 피흡: 실제로 깎은 체력 기준
   o.hp-=dmg;o.flash=.08;
   if(crit||dmg>=30||Math.random()<.3)G.texts.push({x:o.x+R(-6,6),y:o.y-o.r,v:Math.round(dmg),t:0,c:crit?'#ffd94a':null});
   if(!BOT){burst(o.x,o.y-o.r*.4,crit?6:2,HITC[el]||'#fff',crit?190:110,.32,crit?4:3);if(crit)ring(o.x,o.y-o.r*.4,o.r+14,'#ffd94a',.2)}   // 원소 색 불꽃 · 치명타 고리
@@ -1238,15 +1235,15 @@ function kill(m){
   if(m.t==='imp'){G.corpses.push({x:m.x,y:m.y,t:G.t});for(const o of G.mobs)if(o.t==='imp'&&!o.dead&&dd(o,m)<140*140)o.flee=1}
   if(G.awk.poison&&m.psn>0){const r=60,dm=15*lvM(G.sk.poison||1)*pw();G.fx.push({k:'boom',x:m.x,y:m.y,r,t:0,life:.35,g:1});for(const o of G.mobs)if(!o.dead&&dd(o,m)<(r+o.r)**2){o.psn=3;o.pdt=3;o.pdps=Math.max(o.pdps||0,dm*.2);hurt(o,dm)}}
   if(m.m.gob){G.gobK=(G.gobK||0)+1;addLoot({k:'chest',x:m.x,y:m.y+10});addLoot({k:'oil',x:m.x+18,y:m.y});G.runGold+=100*G.ch;toast('보물 고블린 처치 · 금화 +'+100*G.ch)}
-  else if(m.el&&Math.random()<.5)addLoot({k:'rune',x:m.x,y:m.y,ch:makeCharm(2)});   // v11: 정예 룬 매번 마법 이상 → 절반 확률로 희귀
-  else if(!m.m.boss&&Math.random()<.008)addLoot({k:'heart',x:m.x,y:m.y});
+  else if(m.el&&Math.random()<.5*(1+(G.luck||0)))addLoot({k:'rune',x:m.x,y:m.y,ch:makeCharm(2)});   // v11: 정예 룬 매번 마법 이상 → 절반 확률로 희귀
+  else if(!m.m.boss&&Math.random()<.008*(1+(G.luck||0)))addLoot({k:'heart',x:m.x,y:m.y});
   if(m.m.boss){G.shake=.6;sfx('boom');bossLoot(m);
     if(G.area>=LAST){G.win=true;G.exitOpen=1;bossClear();G.es=[];G.hz=[];G.endT=G.t+1.6;toast(`${m.m.n} 처치 · 원정 성공!`);return}   // v16: 떨어진 것이 끌려오는 걸 보고 결과
     if(m.m.gc)addLoot({k:'chestG',x:m.x,y:m.y+10});if(m.t==='king')G.kingK=1;G.exitOpen=1;for(let i=0;i<10;i++)addLoot({k:'gem',x:m.x+R(-50,50),y:m.y+R(-50,50),v:5});
     bossClear();toast(`${m.m.n} 처치${m.m.gc?' · 금상자':''} · 남은 적이 흩어지고 주변 보석이 끌려온다 · 포털이 열렸다`)}
 }
 // v16 보스 드랍: 주문서 평균 SC_BOSS장(부위 무작위) · 장비 BOSS_GEAR 확률 — hold초 동안 보인 뒤 자석, 주우면 져도 가져감(runRewards)
-function bossLoot(m){if(G.tut)return;const n=Math.floor(SC_BOSS)+(Math.random()<SC_BOSS%1?1:0);for(let i=0;i<n;i++)addLoot({k:'sc',sl:pick(SLOTS),x:m.x+R(-45,45),y:m.y+R(-15,30),hold:.8});if(Math.random()<BOSS_GEAR)addLoot({k:'gear',it:rollGear(T_N),x:m.x+R(-25,25),y:m.y+R(5,25),hold:1})}
+function bossLoot(m){if(G.tut)return;const n=Math.floor(SC_BOSS)+(Math.random()<SC_BOSS%1?1:0);for(let i=0;i<n;i++)addLoot({k:'sc',sl:pick(SLOTS),x:m.x+R(-45,45),y:m.y+R(-15,30),hold:.8});if(Math.random()<BOSS_GEAR*(1+(G.luck||0)))addLoot({k:'gear',it:rollGear(T_N),x:m.x+R(-25,25),y:m.y+R(5,25),hold:1})}
 function bossClear(){if(G.tut)return;for(const o of G.mobs)if(!o.dead&&!o.m.boss&&!o.m.gob){o.dead=true;if(!BOT&&G.parts.length<300)for(let i=0;i<3;i++)G.parts.push({x:o.x,y:o.y,vx:R(-80,80),vy:R(-120,20),t:0,life:R(.3,.5),c:o.m.pc,s:3})}for(const l of G.loot)if(!l.hold&&dd(l,G.p)<MAG_R*MAG_R)l.mag=2}   // 남은 잡몹은 흩어짐(보상 없음 — 지도 전체 처치는 처치 수 · 금화가 부풀어서) · 주변(MAG_R) 보석 · 룬 · 상자 자석(하트 제외)
 function gotGear(it){G.runItems.push(it);if(!BOT)toast(`<b style="color:${GRADES[it.g].c}">${GRADES[it.g].n} ${GEAR[it.k].n}</b> 획득`);sfx('chest')}
 function gotSc(s){G.scGot[s]=(G.scGot[s]||0)+1;if(!BOT)toast(`${SLOTN[s]} 주문서 획득`);sfx('pick')}
@@ -1256,7 +1253,7 @@ function dmgP(v,src){if(G.win)return;v*=(1-G.p.dr)*(G.buf.ward>0?.5:1);G.p.hp-=v
 
 /* ---------- 적 ---------- */
 function spawn(t,el,x,y){
-  t=G.ro[t]||t;const m=MT[t],P=G.p,k=G.d/60,hm=m.boss?G.hpM:(1+k*2+k*k*HPQ)*(el?5:1)*G.hpM*RUN_HP[G.ch>=10?1:0];   // v7: 각인으로 후반 힘이 계속 쌓여 후반 체력 가속(HPQ)
+  t=G.ro[t]||t;const m=MT[t],P=G.p,k=G.d/60,hm=m.boss?G.hpM:(1+k*2+k*k*HPQ)*(el?5:1)*G.hpM*RUN_HP[G.ch>=10?1:0];   // v7: 후반 체력 가속(HPQ, v7 각인 누적 기준 값 — v17 빙고 기준으로 봇 확인)
   if(x===undefined){
     const d=Math.hypot(W,H)/2+60;[x,y]=pathSpot(d,d+380,SP_AHEAD);
   }
@@ -1327,7 +1324,7 @@ function updMobs(dt){
     const mq=m.q;if(mq&&(m.m.gob||Math.abs(mq.s-G.ps)>d*1.4+140)){const g=G.map.path.sg[mq.i],[x1,y1,x2,y2]=g,l=Math.hypot(x2-x1,y2-y1)||1,sg=g[8]>=0?(m.m.gob?1:-1):(m.m.gob?mq.s>=G.ps:mq.s<G.ps)?1:-1;ux=(x2-x1)/l*sg+(mq.px-m.x)/(mq.r||1)*.6;uy=(y2-y1)/l*sg+(mq.py-m.y)/(mq.r||1)*.6;const ul=Math.hypot(ux,uy)||1;ux/=ul;uy/=ul}
     if(m.m.range){
       m.cd-=dt;const dir=d<m.m.range*.75?-.6:d>m.m.range?1:0;m.x+=ux*sp*dir*dt;m.y+=uy*sp*dir*dt;
-      if(m.cd<=0&&d<m.m.range+60){m.cd=m.m.rcd||2.6;const ps=m.m.ps||230;G.es.push({x:m.x,y:m.y-8,vx:dx/d*ps,vy:dy/d*ps,dmg:(m.m.pd||7)*dmgT,r:m.m.pr||5,t:0,life:2,k:m.m.pk||'bone'})}
+      if(m.cd<=0&&d<m.m.range+60){m.cd=m.m.rcd||2.6;m.rev=G.t+REV_T;const ps=m.m.ps||230;G.es.push({x:m.x,y:m.y-8,vx:dx/d*ps,vy:dy/d*ps,dmg:(m.m.pd||7)*dmgT,r:m.m.pr||5,t:0,life:2,k:m.m.pk||'bone'})}
     }else if((m.m.ai||m.t)==='king'){
       m.cd-=dt;
       if(m.st==='walk'){m.x+=ux*sp*dt;m.y+=uy*sp*dt;if(m.cd<=0){m.st='wind';m.wt=.5;m.tx=P.x;m.ty=P.y}}
@@ -1385,7 +1382,7 @@ function updShots(dt){
   }
   G.shots=G.shots.filter(s=>s.t<s.life);
   const P=G.p;
-  for(const s of G.es){s.t+=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;if(P.inv<=0&&dd(s,P)<(s.r+11)**2){dmgP(s.dmg,s.k);P.inv=.35;s.t=s.life;G.hurtT=.2;sfx('hurt')}}
+  for(const s of G.es){s.t+=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;{const q=nearPath(s.x,s.y);if(q.d>q.r+6){s.t=s.life;if(!BOT)burst(s.x,s.y,3,'#b8a888',70,.25,2);continue}}if(P.inv<=0&&dd(s,P)<(s.r+11)**2){dmgP(s.dmg,s.k);P.inv=.35;s.t=s.life;G.hurtT=.2;sfx('hurt')}}
   G.es=G.es.filter(s=>s.t<s.life);
 }
 // v13 이펙트 도우미: 파편·불씨(상한 300개), 원소별 타격 색
@@ -1406,8 +1403,8 @@ function updLoot(dt){
   for(const l of G.loot){
     const q=dd(l,P);
     if(l.hold>0){l.hold-=dt;if(l.hold<=0)l.mag=2;continue}
-    if(l.k!=='heart'&&(q<pr||l.mag)){l.mag=l.mag||1;const d=Math.sqrt(q)||1,v=(l.mag>1?Math.max(900,d*2.5):480)*dt;l.x+=(P.x-l.x)/d*Math.min(v,d);l.y+=(P.y-l.y)/d*Math.min(v,d)}
-    if(q<20*20){l.dead=1;
+    if((l.k!=='heart'||P.hp<P.maxhp)&&(q<pr||l.mag)){l.mag=l.mag||1;const d=Math.sqrt(q)||1,v=(l.mag>1?Math.max(900,d*2.5):480)*dt;l.x+=(P.x-l.x)/d*Math.min(v,d);l.y+=(P.y-l.y)/d*Math.min(v,d)}
+    if(q<20*20&&(l.k!=='heart'||P.hp<P.maxhp)){l.dead=1;
       if(l.k==='gem'){gainXp(l.v);sfx('pick')}
       else if(l.k==='heart'){P.hp=Math.min(P.maxhp,P.hp+P.maxhp*.25);G.texts.push({x:P.x,y:P.y-30,v:'+회복',t:0,c:'#ff7a8a'});sfx('chest')}
       else if(l.k==='rune'){const p=acquire(l.ch);acquireToast(l.ch,p);sfx('place');if(!BOT)bagPing()}
@@ -1431,7 +1428,7 @@ function botMove(){
   for(const s of G.es){const q=dd(P,s);if(q<90*90){const d=Math.sqrt(q)||1;vx+=(P.x-s.x)/d*1.2;vy+=(P.y-s.y)/d*1.2}}
   for(const z of G.hz){const q=dd(P,z),R0=z.r+35;if(q<R0*R0){const d=Math.sqrt(q)||1;vx+=(P.x-z.x)/d*2.5;vy+=(P.y-z.y)/d*2.5}}for(const m of G.mobs)if(m.st==='fuse'&&dd(P,m)<120*120){const d=Math.sqrt(dd(P,m))||1;vx+=(P.x-m.x)/d*3;vy+=(P.y-m.y)/d*3}
   const same=o=>Math.abs((o.s??G.ps)-G.ps)<500&&(o.s??G.ps)>G.bpS-250;   // 숲 너머 다른 길 구간은 목표에서 제외
-  const leave=G.exitOpen&&G.area<LAST;let goal=null,bd=420*420;for(const l of G.loot){if(stall||leave&&l.k!=='chestG'&&l.k!=='chest'&&l.k!=='rune')continue;const q=dd(l,P);if(q<(l.k==='gem'?160*160:bd)&&q<bd&&same(l)){bd=q;goal=l}}   // 보석은 가까운 것만(멀리 되돌아가지 않음)
+  const leave=G.exitOpen&&G.area<LAST;let goal=null,bd=420*420;for(const l of G.loot){if(l.k==='heart'&&P.hp>=P.maxhp)continue;if(stall||leave&&l.k!=='chestG'&&l.k!=='chest'&&l.k!=='rune')continue;const q=dd(l,P);if(q<(l.k==='gem'?160*160:bd)&&q<bd&&same(l)){bd=q;goal=l}}   // 보석은 가까운 것만(멀리 되돌아가지 않음)
   if(!leave&&!stall)for(const s of G.shrines){const q=dd(s,P);if(q<bd*1.5&&same(s)){bd=q;goal=s}}for(const m of G.mobs)if(m.m.gob&&dd(m,P)<500*500&&(!m.q||same(m.q)))goal=m;
   const pa=G.map.path,nb=nearPath(P.x,P.y),bb=nb.br>=0?pa.brs[nb.br]:leave?null:pa.brs.find(b=>!b.done&&b.s>G.ps-300&&b.s<G.ps+400);   // 곁가지: 갈림목 → 보물 터 → 갈림목(고블린 추적만 앞섬)
   let bk=9;if(bb&&bb.done){let bq=1e18;bb.pts.forEach((p,i)=>{const q=(p[0]-P.x)**2+(p[1]-P.y)**2;if(q<bq){bq=q;bk=i}})}if(bb&&!(goal&&goal.m&&goal.m.gob)&&!(bb.done&&bk<=1))goal=bb.done?{x:bb.pts[Math.max(0,bk-3)][0],y:bb.pts[Math.max(0,bk-3)][1]}:nb.br>=0||dd(P,bb.j)<120*120?bb.end:bb.j;
@@ -1474,7 +1471,7 @@ function step(dt){
   P.x=clamp(P.x+mx*P.spd*dt,16,AW-16);P.y=clamp(P.y+my*P.spd*dt,16,AW-16);G.ps=wallPush(P,10).s;if(G.ps>G.pmax)G.pmax=G.ps;for(const b of G.map.path.brs)if(!b.done&&dd(P,b.end)<160*160)treasureSpot(b);
   if(Math.abs(mx)>.15)P.face=mx>0?1:-1;P.moving=ml>.15;if(P.moving)P.wt+=dt;
   P.inv-=dt;G.shake=Math.max(0,G.shake-dt);G.hurtT=Math.max(0,G.hurtT-dt);
-  for(const k in G.buf)G.buf[k]=Math.max(0,G.buf[k]-dt);if(P.regen)P.hp=Math.min(P.maxhp,P.hp+P.regen*dt);
+  for(const k in G.buf)G.buf[k]=Math.max(0,G.buf[k]-dt);if(P.regen)P.hp=Math.min(P.maxhp,P.hp+P.regen*dt);if(G.lsA){P.hp=Math.min(P.maxhp,P.hp+Math.min(G.lsA,P.ls*P.maxhp*dt));G.lsA=0}   // v17 피흡 회복: 초당 최대 생명력 × 피흡%까지
   for(const s of G.shrines)if(dd(s,P)<28*28){s.used=1;useShrine(s)}G.shrines=G.shrines.filter(s=>!s.used);
   director(dt);updSkills(dt);updShots(dt);updMobs(dt);updLoot(dt);updFx(dt);
   if(!BOT)revealFog();G.fade=Math.max(0,(G.fade||0)-dt*1.6);
@@ -1552,7 +1549,7 @@ function buildMinimap(map){
 }
 const lightR=()=>(LIGHT_B-50*AREAS[G.area].dark)*G.lightM;
 const darkA=()=>.86*(.45+.25*AREAS[G.area].dark);   // 빛 밖 어둠 농도: 지역 1·2·3 = 버전 8(.86)의 51·60·70%
-const LIT_SLOW=.8,HPQ=.5,FULLMAX=8;   // FULLMAX: 꽉 찬 줄 보너스 최대 줄 수(각인으로 끝없이 쌓이는 것 방지)   // 빛(반경 80%) 안에 들어온 적(보스 제외) 이동 속도 배율
+const LIT_SLOW=.8,HPQ=0.35,FULLMAX=8;   // FULLMAX: 빙고 줄 피해 보너스 최대 줄 수   // 빛(반경 80%) 안에 들어온 적(보스 제외) 이동 속도 배율
 // 어둠 속 적 눈: 스프라이트 도트 좌표 [왼눈 x, 오른눈 x, y, 크기](뒤집기 전). 빛에서 멀수록 진하게 → 빛 밖에서도 적 위치가 보임
 const EYE={wolf:[28,31,9,1],iwitch:[15,24,21,2],snowball:[10,18,12,2],ibrute:[18,23,13,2],wolfK:[60,64,16,2],yeti:[39,46,17,2],bwitch:[19,25,21,2],fknight:[15,21,27,2],iqueen:[31,36,17,2],
   hound:[41,44,19,2],sorc:[14,22,21,2],ember:[12,20,21,2],houndK:[49,52,18,2],lgiant:[31,36,9,2],fwitch:[14,19,20,2],hknight:[16,21,12,2],demon:[33,39,19,2],slime:[13,23,12,2],bat:[25,33,9,2],skel:[10,16,10,2],golem:[25,33,12,3],imp:[23,29,13,2],shaman:[12,18,9,2],goblin:[29,33,10,2],king:[58,90,74,4],lich:[46,54,30,4]},EYES=[];
@@ -1590,6 +1587,7 @@ function lighting(camX,camY){
   const P=G.p,ex=G.map.exit;L(P.x-camX,P.y-camY-10,lightR());if(G.exitShown)L(ex.x-camX,ex.y-camY-30,G.exitOpen?95+Math.sin(G.t*5)*8:42,G.exitOpen?.95:.5);
   for(const b of G.map.path.brs)if(!b.done)L(b.end.x-camX,b.end.y-camY,90,.7);   // 보물 터 빛: 본 길에서도 보이게
   for(const s of G.shrines)L(s.x-camX,s.y-camY,80,.85);
+  for(const m of G.mobs)if(!m.dead&&(m.m.gob||m.rev>G.t))L(m.x-camX,m.y-camY-m.r*.5,m.m.gob?64:36,m.m.gob?.9:.65);   // v17 보물 고블린 금빛 · 방금 쏜 적 노출
   for(const l of G.loot)if(l.k==='rune'||l.k==='chestG'||l.k==='oil'||l.k==='sc'||l.k==='gear')L(l.x-camX,l.y-camY,l.k==='gear'?60:36,.5);
   for(const s of G.es)if(s.k==='orb'||s.k==='fire'||s.k==='bone')L(s.x-camX,s.y-camY,40,.6);
   for(const f of G.fx){const a=1-f.t/f.life;if(f.k==='boom'||f.k==='meteor')L(f.x-camX,f.y-camY,f.r*1.4,.8*a);else if(f.k==='pillar')L(f.x-camX,f.y-camY,90,.8*a);else if(f.k==='bolt')L(f.x2-camX,f.y2-camY,70,.7*a)}
@@ -1797,19 +1795,21 @@ function renderBag(){
   for(const ch of inBag()){const el=charmEl(ch,CS);el.style.left=ch.x*CS+'px';el.style.top=ch.y*CS+'px';A.appendChild(el)}
   tray().forEach((ch,i)=>{const p=trayPos(i),el=charmEl(ch,t);el.style.left=p.x+'px';el.style.top=p.y+'px';A.appendChild(el)});
   if(G.tut&&G.tut.s===3){   // 튜토리얼: 보관함 룬 → 빈칸 강조, 지우면 설명
-    if(G.ins.lines>G.tut.l0&&!G.tut.cleared){G.tut.cleared=1;coach('줄이 지워졌다! 지운 칸의 힘은 <b>영원히 남는다</b>(각인) · 6색이 모두 다르면 <b>무지개</b>, 같은 색 6칸이면 <b>룬어</b> · 룬을 톡 누르면 회전, 같은 색 룬 위로 끌면 합성',{next:true,low:true})}
+    if(G.ins.lines>G.tut.l0&&!G.tut.cleared){G.tut.cleared=1;coach('<b>빙고!</b> 꽉 찬 줄은 그대로 남아 효과가 이어진다(줄마다 피해 +3% · 최대 생명력 +6 · 이동 속도 +2%) · 6속성이 모두 다르면 <b>무지개</b>, 같은 속성 6칸이면 <b>룬어</b> · 룬을 톡 누르면 회전, 같은 속성 룬 위로 끌면 합성',{next:true,low:true})}
     else if(!G.tut.cleared){const p=trayPos(0);for(const[x,y,w]of[[(GRID-1)*CS,G.tut.row*CS,CS],[p.x,p.y,t]]){const d=document.createElement('div');d.className='tutHi';d.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${w}px`;A.appendChild(d)}}}
+  for(const id of G.li.on||[]){const d=document.createElement('div'),i=+id.slice(1);d.className='bgo';d.style.cssText=id[0]==='r'?`left:0;top:${i*CS}px;width:${N*CS}px;height:${CS}px`:`left:${i*CS}px;top:0;width:${CS}px;height:${N*CS}px`;A.appendChild(d)}   // v17 완성된 빙고 줄
   if(G.flash){for(const k of G.flash){const f=document.createElement('div');f.className='clr';f.style.cssText=`left:${k%N*CS}px;top:${(k/N|0)*CS}px;width:${CS}px;height:${CS}px`;A.appendChild(f)}G.flash=null}
   $('#selInfo').innerHTML=G.sel&&G.charms.includes(G.sel)?`<span style="color:${CRAR[G.sel.r].c}">${charmName(G.sel)}</span> · ${ncell(G.sel)}칸 · ${charmStat(G.sel)}`:'';
   const P=G.p,rows=[];
   rows.push(`기술: ${Object.entries(G.sk).map(([c,L])=>`<span style="color:${COLORS[c].c}">${G.awk[c]?'★'+AWK[c]:COLORS[c].sk} Lv${Math.floor(L)}</span>`).join(' · ')||'없음'}`);
-  rows.push(`<span class="${G.ins.lines?'on':'off'}">지운 줄 ${G.ins.lines}줄 · 각인 ${G.ins.cells}칸(기술 레벨·능력치 영구)</span>`);
-  rows.push(`<span class="${li.full?'on':'off'}">꽉 찬 줄 각인 ${li.full}개 → 공격력 +${Math.min(FULLMAX,li.full)*3}% (최대 ${FULLMAX}줄)</span>`);
-  rows.push(`<span class="${li.rainbow?'on':'off'}">무지개 룬어 ${li.rainbow}개(한 줄 6색): 모든 기술 대기 -${Math.min(3,li.rainbow)*10}% · Lv&nbsp;10&nbsp;이상 기술 각성&nbsp;조건</span>`);
-  for(const c in COLORS){const n=li.same[c]||0,tr=tier(c);if(n||G.sk[c])rows.push(`<span class="${n?'on':'off'}">${COLORS[c].n} 룬어 ${n}개${tr?` · ${tr}단계`:''}: ${LINE[c]}${tr===2?' (효과 2배)':''}</span>`)}
-  rows.push('<span class="off">가로·세로 한 줄을 채우면 지워지며 영구 각인 · 같은 색 줄 = 룬어(1개 1단계, 3개 이상 2단계) · 6색 줄 = 무지개 · 2줄 이상 동시에 지우면 줄마다 생명력 8% · 오른쪽·아래 표시등 = 채우면 받을 보너스 · 같은 색 룬 위로 끌면 합성</span>');
+  const o=G.opt||{};
+  rows.push(`<span class="${li.full?'on':'off'}">빙고 ${li.full}줄 → 피해 +${Math.round(Math.min(FULLMAX,li.full)*BINGO_DM*100)}% (최대 ${FULLMAX}줄)${BINGO_MH?` · 최대 생명력 +${Math.round(li.full*BINGO_MH)}`:''}${BINGO_SP?` · 이동 속도 +${Math.round(li.full*BINGO_SP*100)}%`:''}</span>`);
+  rows.push(`<span class="${li.rainbow?'on':'off'}">무지개 줄 ${li.rainbow}개(한 줄 6속성): 모든 기술 대기 -${Math.min(3,li.rainbow)*10}% · Lv&nbsp;10&nbsp;이상 기술 각성&nbsp;조건</span>`);
+  for(const c in COLORS){const n=li.same[c]||0,tr=tier(c);if(n||G.sk[c])rows.push(`<span class="${n?'on':'off'}">${COLORS[c].n} 룬어 ${n}줄${tr?` · ${tr}단계`:''}: ${LINE[c]}${tr===2?' (효과 2배)':''}</span>`)}
+  rows.push(`옵션: ${Object.entries(CSTAT).map(([k,[t]])=>t.replace('%v',+(o[k]||0).toFixed(1))).join(' · ')}`);
+  rows.push(`<span class="off">가로·세로 줄을 채우면 빙고(지워지지 않음 · 룬을 빼면 꺼짐) · 같은 속성 6칸 = 룬어(1줄 1단계 · 2줄 2단계) · 6속성 = 무지개 · 줄이 처음 완성되면 생명력 ${Math.round(BINGO_HP*100)}% · 오른쪽·아래 표시등 = 채우면 받을 효과 · 같은 속성 룬 위로 끌면 합성</span>`);
   rows.push(`생명력 ${Math.round(P.hp)}/${P.maxhp} · 피해 ×${P.dmgM.toFixed(2)} · 치명 ${Math.round(P.crit*100)}%`);
-  rows.push(`시야 ×${G.lightM.toFixed(2)} (등불 장비 +${G.gs.light.toFixed(0)}% · 룬·기름 +${G.runLight}%/40% · 기름 ${G.oil}/5, 최대 1.8배)`);
+  rows.push(`시야 ×${G.lightM.toFixed(2)} (등불 장비 +${G.gs.light.toFixed(0)}% · 기름 +${G.runLight}%/40% · 기름 ${G.oil}/5, 최대 1.8배)`);
   $('#bagSum').innerHTML=rows.map(r=>`<div>${r}</div>`).join('');
 }
 function areaPos(e){const r=$('#bagArea').getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
