@@ -609,7 +609,7 @@ function tutDone(skip){
   const first=!SV.tutDone;SV.tutDone=1;if(first&&!skip)SV.gems+=50;persist();
   for(const id of['coach','joyHint','hud','bag','pick'])$('#'+id).hidden=true;
   G=null;$('#lobby').hidden=false;TAB='run';renderLobby();
-  openMeta(skip?'튜토리얼 건너뜀':'튜토리얼 완료!',`<div class="note" style="font-size:14px;text-align:left;line-height:1.75">· 끌어서 이동, 공격은 자동<br>· 레벨업 → 룬 고르기 → 보따리에 들어가 기술이 됨<br>· 가로·세로 줄을 채우면 빙고(줄마다 피해 +3% · 최대 생명력 +6 · 이동 속도 +2% · 같은 속성 = 룬어 · 6속성 = 무지개)<br>· 어둠 속 빨간 눈 = 적 · 빛 밖의 적은 공격 안 닿음(보스 · 보물 고블린 · 방금 쏜 적 제외) · 등불 기름 = 시야<br>· 길 끝 보스 → 처치하면 남은 적이 흩어지고 주변 보석 자석 + 포털 → 다음 지역(5지역) · 보스는 주문서 · 장비를 떨어뜨림<br>· 곁가지 끝 보물 터 = 보물 고블린 · 오른쪽 위 지도를 누르면 전체 지도<br>· 튜토리얼은 원정 화면 아래 버튼으로 다시 할 수 있다${first&&!skip?'<br><b style="color:var(--gold)">보상: 보석 50</b>':''}</div>`);
+  openMeta(skip?'튜토리얼 건너뜀':'튜토리얼 완료!',`<div class="note" style="font-size:14px;text-align:left;line-height:1.75">· 끌어서 이동, 공격은 자동<br>· 레벨업 → 룬 고르기 → 보따리에 들어가 기술이 됨<br>· 가로·세로 줄을 채우면 빙고(줄마다 피해 +3% · 최대 생명력 +6 · 이동 속도 +2% · 같은 속성 = 룬어 · 6속성 = 무지개)<br>· 어둠 속 빨간 눈 = 적 · 빛 밖의 적은 공격 안 닿음(보스 · 보물 고블린 · 방금 쏜 적 제외) · 등불 기름 = 시야 · 어둠 걷힘<br>· 길 끝 보스 → 처치하면 남은 적이 흩어지고 주변 보석 자석 + 포털 → 다음 지역(5지역) · 보스는 주문서 · 장비를 떨어뜨림<br>· 곁가지 끝 보물 터 = 보물 고블린 · 오른쪽 위 지도를 누르면 전체 지도<br>· 튜토리얼은 원정 화면 아래 버튼으로 다시 할 수 있다${first&&!skip?'<br><b style="color:var(--gold)">보상: 보석 50</b>':''}</div>`);
 }
 $('#coachNext').onclick=()=>{if(G&&G.tut&&G.tut.s===3&&G.tut.cleared){$('#bag').hidden=true;resume();tutGo(4)}};
 $('#coachSkip').onclick=()=>{if(G&&G.tut)tutDone(true)};
@@ -1075,7 +1075,7 @@ function rebuildRun(){
   P.ls=s.ls/100;P.aspdM=1/(1+Math.min(ASP_MAX,s.aspd)/100);P.sdmM=1+s.sdmg/100;G.luck=Math.min(1,s.luck/100);   // v17 속성 옵션(피흡 · 공속 · 기술 피해 · 아이템 확률)
   P.regen=L.holy?1.5*tier('holy'):0;
   P.dr=gs.dr+(G.cls==='warrior'?.1:0);
-  G.runLight=Math.min(40,6*(G.oil||0));G.lightM=Math.min(1.8,1+(G.runLight+gs.light)/100);   // 판 안(기름) 최대 +40%, 등불 장비는 그 위에, 전체 1.8배(v17 룬 시야 없음)
+  G.runLight=Math.min(40,6*(G.oil||0));G.lightM=Math.min(1.8,1+(G.runLight+gs.light)/100);   // 판 안(기름) 최대 +30%(5개 × 6%), 등불 장비는 그 위에, 전체 1.8배(v17 룬 시야 없음)
 }
 const pw=()=>G.p.atk/20*G.p.dmgM*(1+.03*(G.lv-1))*(G.buf.rage>0?1.5:1);
 // 룬 획득: 자리 있으면 장착 → 없으면 같은 색 합성(호라드릭) → 그것도 없으면 녹이기(고유 룬은 보관함)
@@ -1408,7 +1408,7 @@ function updLoot(dt){
       if(l.k==='gem'){gainXp(l.v);sfx('pick')}
       else if(l.k==='heart'){P.hp=Math.min(P.maxhp,P.hp+P.maxhp*.25);G.texts.push({x:P.x,y:P.y-30,v:'+회복',t:0,c:'#ff7a8a'});sfx('chest')}
       else if(l.k==='rune'){const p=acquire(l.ch);acquireToast(l.ch,p);sfx('place');if(!BOT)bagPing()}
-      else if(l.k==='oil'){if(G.oil<5){G.oil++;rebuildRun();toast(`등불 기름 · 시야 +6% (${G.oil}/5) · 빛 안의 적만 공격이 닿는다`)}else{P.hp=Math.min(P.maxhp,P.hp+P.maxhp*.1);toast('등불 기름이 가득 찼다 · 생명력 10%')}sfx('chest')}
+      else if(l.k==='oil'){if(G.oil<5){G.oil++;rebuildRun();toast(`등불 기름 · 시야 +6% · 어둠 -10% (${G.oil}/5) · 빛 안의 적만 공격이 닿는다`)}else{P.hp=Math.min(P.maxhp,P.hp+P.maxhp*.1);toast('등불 기름이 가득 찼다 · 생명력 10%')}sfx('chest')}
       else if(l.k==='chestG'){G.gch++;sfx('chest')}
       else if(l.k==='gear')gotGear(l.it);
       else if(l.k==='sc')gotSc(l.sl);
@@ -1548,7 +1548,7 @@ function buildMinimap(map){
   return{S,base,fog,fogG:fog.getContext('2d'),view,viewG:view.getContext('2d')};
 }
 const lightR=()=>(LIGHT_B-50*AREAS[G.area].dark)*G.lightM;
-const darkA=()=>.86*(.45+.25*AREAS[G.area].dark);   // 빛 밖 어둠 농도: 지역 1·2·3 = 버전 8(.86)의 51·60·70%
+const darkA=()=>(.56+.1*AREAS[G.area].dark)*(1-.1*Math.min(5,G.oil||0));   // v17.1 빛 밖 어둠 농도: 기름 0개 .585(지역 1)~.66(지역 5) → 기름마다 10%씩 걷혀 5개면 절반
 const LIT_SLOW=.8,HPQ=0.35,FULLMAX=8;   // FULLMAX: 빙고 줄 피해 보너스 최대 줄 수   // 빛(반경 80%) 안에 들어온 적(보스 제외) 이동 속도 배율
 // 어둠 속 적 눈: 스프라이트 도트 좌표 [왼눈 x, 오른눈 x, y, 크기](뒤집기 전). 빛에서 멀수록 진하게 → 빛 밖에서도 적 위치가 보임
 const EYE={wolf:[28,31,9,1],iwitch:[15,24,21,2],snowball:[10,18,12,2],ibrute:[18,23,13,2],wolfK:[60,64,16,2],yeti:[39,46,17,2],bwitch:[19,25,21,2],fknight:[15,21,27,2],iqueen:[31,36,17,2],
@@ -1576,15 +1576,15 @@ function drawMap(big){
 }
 function shadow(x,y,w){cx.fillStyle='rgba(20,32,12,.24)';const h=Math.max(3,w*.32|0);cx.fillRect(Math.round(x-w),Math.round(y-h/2),Math.round(w*2),h);cx.fillRect(Math.round(x-w*.75),Math.round(y-h/2-1),Math.round(w*1.5),h+2)}
 function pixelRing(x,y,r,col,a){cx.globalAlpha=Math.max(0,Math.min(1,a));cx.fillStyle=col;const n=Math.max(18,r*.7|0);for(let i=0;i<n;i++){const t=i/n*TAU;cx.fillRect(Math.round(x+Math.cos(t)*r)-1,Math.round(y+Math.sin(t)*r*.8)-1,3,3)}cx.globalAlpha=1}
-// 어둠·시야(디아블로식 등불 반경): 화면 전체를 어둡게 덮고 빛나는 것만 구멍. 지역이 깊을수록 반경이 줄고 짙고 푸르게, 시야 아이템으로 넓힘
+// 어둠·시야(디아블로식 등불 반경): 화면 전체를 어둡게 덮고 빛나는 것만 구멍. 지역이 깊을수록 반경이 줄고 푸르게 · 빛 밖 어둠은 기름마다 걷힘(v17.1), 시야 아이템으로 넓힘
 const DK=document.createElement('canvas');let DKG=null;
 function lighting(camX,camY){
   const n=AREAS[G.area].dark;
-  cx.globalCompositeOperation='multiply';cx.fillStyle=`rgb(${168-48*n|0},${156-36*n|0},${176-8*n|0})`;cx.fillRect(0,0,W,H);cx.globalCompositeOperation='source-over';
+  const k=Math.min(5,G.oil||0)/5,tl=a=>a+(255-a)*k*.8|0;cx.globalCompositeOperation='multiply';cx.fillStyle=`rgb(${tl(232-30*n)},${tl(226-24*n)},${tl(240-8*n)})`;cx.fillRect(0,0,W,H);cx.globalCompositeOperation='source-over';   // v17.1 화면 전체 색: 빛 안까지 약 60%로 어둡던 것 → 기름 0개 약 88%(지역 색감) · 5개 약 97%
   if(DK.width!==W||DK.height!==H){DK.width=W;DK.height=H;DKG=DK.getContext('2d')}
   const g=DKG;g.globalCompositeOperation='source-over';g.clearRect(0,0,W,H);g.fillStyle=`rgba(5,4,12,${darkA().toFixed(3)})`;g.fillRect(0,0,W,H);g.globalCompositeOperation='destination-out';
-  let nL=0;const L=(x,y,r,a=1)=>{if(x<-r||y<-r||x>W+r||y>H+r||++nL>40)return;const gr=g.createRadialGradient(x,y,r*.3,x,y,r);gr.addColorStop(0,`rgba(0,0,0,${a})`);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2)};
-  const P=G.p,ex=G.map.exit;L(P.x-camX,P.y-camY-10,lightR());if(G.exitShown)L(ex.x-camX,ex.y-camY-30,G.exitOpen?95+Math.sin(G.t*5)*8:42,G.exitOpen?.95:.5);
+  let nL=0;const L=(x,y,r,a=1,c=.3)=>{if(x<-r||y<-r||x>W+r||y>H+r||++nL>40)return;const gr=g.createRadialGradient(x,y,r*c,x,y,r);gr.addColorStop(0,`rgba(0,0,0,${a})`);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2)};
+  const P=G.p,ex=G.map.exit;L(P.x-camX,P.y-camY-10,lightR(),1,.55);if(G.exitShown)L(ex.x-camX,ex.y-camY-30,G.exitOpen?95+Math.sin(G.t*5)*8:42,G.exitOpen?.95:.5);
   for(const b of G.map.path.brs)if(!b.done)L(b.end.x-camX,b.end.y-camY,90,.7);   // 보물 터 빛: 본 길에서도 보이게
   for(const s of G.shrines)L(s.x-camX,s.y-camY,80,.85);
   for(const m of G.mobs)if(!m.dead&&(m.m.gob||m.rev>G.t))L(m.x-camX,m.y-camY-m.r*.5,m.m.gob?64:36,m.m.gob?.9:.65);   // v17 보물 고블린 금빛 · 방금 쏜 적 노출
@@ -1713,7 +1713,7 @@ function nearItem(){let b=null,bd=180*180;for(const l of G.loot){if(l.k==='gem')
 function itemInfo(l){
   if(l.k==='rune'){const ch=l.ch,C=colorOf(ch),L=G.sk[ch.col]||0,n=ncell(ch),p=planFor(ch),gain=p.a==='place'?n*RW[ch.r]:p.a==='merge'?ncell(p.t)*(RW[Math.min(2,Math.max(p.t.r+1,ch.r))]-RW[p.t.r]):0;
     return`<div class="n" style="color:${CRAR[ch.r].c}">${charmName(ch)}</div><div>${n}칸 · ${charmStat(ch)}</div><div style="color:${C.c}">${C.sk} ${gain?`Lv ${Math.floor(L)} → ${Math.floor(L+gain)}`:L?`Lv ${Math.floor(L)}`:'새 기술'}</div><div class="act">밟으면 ${planText(ch,p)}</div>`}
-  if(l.k==='oil')return`<div class="n" style="color:#ffb060">등불 기름</div><div>이번 원정 시야 +6% (${G.oil}/5)</div><div>빛 안의 적만 자동 공격 · 빛 안의 적은 ${Math.round((1-LIT_SLOW)*100)}% 느려진다</div><div class="act">${G.oil<5?'밟으면 시야 증가':'최대 · 밟으면 생명력 10%'}</div>`;
+  if(l.k==='oil')return`<div class="n" style="color:#ffb060">등불 기름</div><div>이번 원정 시야 +6% · 빛 밖 어둠 -10% (${G.oil}/5)</div><div>빛 안의 적만 자동 공격 · 빛 안의 적은 ${Math.round((1-LIT_SLOW)*100)}% 느려진다</div><div class="act">${G.oil<5?'밟으면 시야 증가 · 어둠 걷힘':'최대 · 밟으면 생명력 10%'}</div>`;
   if(l.k==='chest')return`<div class="n" style="color:#e8c070">보물 상자</div><div>희귀 이상 룬 4개 중 1개 선택</div>`;
   if(l.k==='chestG')return`<div class="n" style="color:#ffb340">금상자</div><div>각성 또는 유니크 룬 3개 중 1개 선택</div>`;
   return`<div class="n" style="color:#ff7a8a">생명의 심장</div><div>생명력 25% 회복</div>`;
@@ -1809,7 +1809,7 @@ function renderBag(){
   rows.push(`옵션: ${Object.entries(CSTAT).map(([k,[t]])=>t.replace('%v',+(o[k]||0).toFixed(1))).join(' · ')}`);
   rows.push(`<span class="off">가로·세로 줄을 채우면 빙고(지워지지 않음 · 룬을 빼면 꺼짐) · 같은 속성 6칸 = 룬어(1줄 1단계 · 2줄 2단계) · 6속성 = 무지개 · 줄이 처음 완성되면 생명력 ${Math.round(BINGO_HP*100)}% · 오른쪽·아래 표시등 = 채우면 받을 효과 · 같은 속성 룬 위로 끌면 합성</span>`);
   rows.push(`생명력 ${Math.round(P.hp)}/${P.maxhp} · 피해 ×${P.dmgM.toFixed(2)} · 치명 ${Math.round(P.crit*100)}%`);
-  rows.push(`시야 ×${G.lightM.toFixed(2)} (등불 장비 +${G.gs.light.toFixed(0)}% · 기름 +${G.runLight}%/40% · 기름 ${G.oil}/5, 최대 1.8배)`);
+  rows.push(`시야 ×${G.lightM.toFixed(2)} (등불 장비 +${G.gs.light.toFixed(0)}% · 기름 +${G.runLight}%/30% · 기름 ${G.oil}/5, 최대 1.8배) · 빛 밖 어둠 -${G.oil*10}%`);
   $('#bagSum').innerHTML=rows.map(r=>`<div>${r}</div>`).join('');
 }
 function areaPos(e){const r=$('#bagArea').getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
