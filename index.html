@@ -488,7 +488,7 @@ Object.assign(MT,{
 });
 
 /* ---------- 저장 ---------- */
-const SAVE_KEY='bq_save_v2';
+const SAVE_KEY='bq_save_v3';   // 2026-11-02 플레이 기록 전체 초기화 · 이전 기록(bq_save_v2)은 각 기기에 그대로 남음 → 되돌리기 = 키를 v2로
 let iid=0;
 function newItem(k,g){return{id:(++iid)+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),k,g,e:0}}   // e = 강화(+0~+25)
 // v8 로비 메타: 에너지·일일 퀘스트·업적·출석·재능·누적 기록
