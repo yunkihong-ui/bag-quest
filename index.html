@@ -145,6 +145,7 @@ h3{font-size:15px;color:var(--dim)}
 #charmBtn.new::after{content:"새 룬";position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--bad);color:#fff;font-size:11px;padding:1px 6px;box-shadow:0 0 0 2px #000;white-space:nowrap}
 
 /* 오버레이 */
+#nickIn{font:inherit;font-size:20px;padding:10px 12px;background:#1a120c;color:#ffe2a0;border:0;border-radius:0;box-shadow:0 0 0 3px #000,inset 0 0 0 2px #e0a84a;width:100%;box-sizing:border-box}
 .ov{position:fixed;inset:0;display:grid;place-items:center;background:rgba(8,6,4,.8);padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow:auto;touch-action:pan-y;z-index:10}
 .panel{width:min(100%,440px);padding:18px 16px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
 .cards{display:flex;flex-direction:column;gap:12px}
@@ -294,6 +295,7 @@ h3{font-size:15px;color:var(--dim)}
   <div class="stats" id="pStats"></div>
   <button class="pbtn" id="resumeBtn">계속하기</button>
   <div class="row"><button class="sbtn" id="bgmBtn">배경음악 끄기</button><button class="sbtn" id="sfxBtn">효과음 끄기</button></div>
+  <div class="row"><button class="sbtn" id="colBtn">기록 보내기 끄기</button><button class="sbtn" id="nickBtn">닉네임 바꾸기</button></div>
   <button class="sbtn" id="quitBtn">포기하고 로비로</button>
 </div></div>
 
@@ -313,6 +315,7 @@ h3{font-size:15px;color:var(--dim)}
 <div id="coach" class="pp" hidden><div class="st" id="coachS"></div><div id="coachT"></div><div class="row"><button class="sbtn green" id="coachNext" hidden>계속</button><button class="sbtn" id="coachSkip">건너뛰기</button></div></div>
 <div id="joyHint" hidden></div>
 <div id="toast"></div>
+<div class="ov" id="nickOv" hidden style="z-index:45"><div class="panel pp"><h2>닉네임</h2><input id="nickIn" maxlength="10" placeholder="2~10자" autocomplete="off" enterkeyhint="done"><p class="note" style="font-size:13px">닉네임과 플레이 기록(직업 · 챕터 · 승패 · 시간 · 기술 · 쓰러진 원인)이 게임 개선 참고용으로 개발자에게 전송된다 · 일시정지 메뉴에서 끌 수 있다</p><button class="pbtn" id="nickOk">확인</button></div></div>
 <div class="ov" id="metaOv" hidden><div class="panel pp"><h2 id="metaT"></h2><div id="metaB"></div><button class="pbtn" id="metaOk">닫기</button></div></div>
 <div class="ov" id="shopOv" hidden><div class="panel pp"><h2 id="shopT">상자 열기</h2><div class="grid5" id="shopRes"></div><p class="note" id="shopNote"></p><button class="pbtn" id="shopOk">확인</button></div></div>
 
@@ -388,8 +391,8 @@ function bgStep(S,i,t,sd){
 }
 function vox(f,t,d,w,v,lp){const o=AC.createOscillator(),g=AC.createGain();o.type=w;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+(lp?.12:.008));g.gain.exponentialRampToValueAtTime(v*.55,t+Math.max(.02,d*.5));g.gain.exponentialRampToValueAtTime(.0005,t+d);
   if(lp){const f2=AC.createBiquadFilter();f2.type='lowpass';f2.frequency.value=900;o.connect(f2);f2.connect(g)}else o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.03)}
-function setOpt(k){const o=OPT();o[k]=o[k]?0:1;persist();if(k==='bgm'&&AC){const t=AC.currentTime;MG.gain.cancelScheduledValues(t);MG.gain.setValueAtTime(MG.gain.value,t);MG.gain.linearRampToValueAtTime(OPT().bgm?BGV:0,t+.3)}optUI()}
-function optUI(){$('#bgmBtn').textContent=OPT().bgm?'배경음악 끄기':'배경음악 켜기';$('#sfxBtn').textContent=OPT().sfx?'효과음 끄기':'효과음 켜기';const b=$('#sndBtn');b.classList.toggle('off',!OPT().bgm);b.querySelector('span').textContent=OPT().bgm?'음악':'음악 끔'}
+function setOpt(k){const o=OPT();o[k]=(o[k]??1)?0:1;persist();if(k==='bgm'&&AC){const t=AC.currentTime;MG.gain.cancelScheduledValues(t);MG.gain.setValueAtTime(MG.gain.value,t);MG.gain.linearRampToValueAtTime(OPT().bgm?BGV:0,t+.3)}optUI()}
+function optUI(){$('#colBtn').textContent=OPT().col===0?'기록 보내기 켜기':'기록 보내기 끄기';$('#bgmBtn').textContent=OPT().bgm?'배경음악 끄기':'배경음악 켜기';$('#sfxBtn').textContent=OPT().sfx?'효과음 끄기':'효과음 켜기';const b=$('#sndBtn');b.classList.toggle('off',!OPT().bgm);b.querySelector('span').textContent=OPT().bgm?'음악':'음악 끔'}
 
 /* ---------- 도트 스프라이트 ---------- */
 const PAL={k:'#1a1423',w:'#f4f1ea',s:'#f5c7a0',S:'#d39b78',r:'#e4483f',R:'#9c2a35',o:'#f7962e',y:'#ffd94a',g:'#6ccf4f',G:'#2f8a3f',h:'#1f5a30',
@@ -540,7 +543,8 @@ for(const k in NP)Object.assign(MT[k],{np:NP[k],fk:FK[k]});
 for(const k of['chief','golemK','skelK','wolfK','yeti','bwitch','fknight','iqueen','houndK','lgiant','fwitch','hknight','demon','gobK'])Object.assign(MT[k],{sc:1,spr:undefined});   // v19 보스 원래 크기 그림(ART2)
 
 /* ---------- 저장 ---------- */
-const SAVE_KEY='bq_save_v3';   // 2026-11-02 플레이 기록 전체 초기화 · 이전 기록(bq_save_v2)은 각 기기에 그대로 남음 → 되돌리기 = 키를 v2로
+const SAVE_KEY='bq_save_v4';   // 2026-11-03 밤 v20.1 전체 초기화(사용자 요청) · 이전 기록 bq_save_v3 · v2는 각 기기에 남음 → 되돌리기 = 키 복귀
+//   // 2026-11-02 플레이 기록 전체 초기화 · 이전 기록(bq_save_v2)은 각 기기에 그대로 남음 → 되돌리기 = 키를 v2로
 let iid=0;
 function newItem(k,g){return{id:(++iid)+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),k,g,e:0}}   // e = 강화(+0~+25)
 // v8 로비 메타: 에너지·일일 퀘스트·업적·출석·재능·누적 기록
@@ -2040,6 +2044,16 @@ function statsHtml(){return`<div><b>${fmt(G.t)}</b><span>시간</span></div><div
 function openPause(){if(!G||G.pause)return;G.pause='pause';$('#pStats').innerHTML=statsHtml();$('#pause').hidden=false}
 function closePause(){$('#pause').hidden=true;resume()}
 $('#pauseBtn').onclick=openPause;$('#resumeBtn').onclick=closePause;
+// v20.1 닉네임 · 플레이 기록: 판이 끝날 때 개인 구글 설문지(formResponse)로 한 줄(JSON) — 공개 주소에서 동작(아티팩트는 외부 전송이 막혀 조용히 실패) · 일시정지 메뉴에서 끄기
+const VER='v20.1',COL_URL='',COL_ENTRY='';   // 설문지 주소 · 「기록」 질문 entry 번호(비어 있으면 보내지 않음)
+const colOn=()=>!!COL_URL&&!!COL_ENTRY&&OPT().col!==0&&!BOT;
+function askNick(){$('#nickIn').value=SV.nick||'';$('#nickOv').hidden=false;setTimeout(()=>$('#nickIn').focus(),50)}
+function setNick(){const v=$('#nickIn').value.trim().slice(0,10);if(v.length<2){$('#nickIn').focus();toast('닉네임은 2자 이상');return}SV.nick=v;if(!SV.did)SV.did=Math.random().toString(36).slice(2,10);persist();$('#nickOv').hidden=true;if(!G)renderLobby()}
+$('#nickOk').onclick=setNick;$('#nickIn').onkeydown=e=>{if(e.key==='Enter')setNick()};
+function runRec(win,quit){const dl=Object.entries(G.dl||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>k+':'+v).join(',');
+  return{v:VER,n:SV.nick||'',id:SV.did||'',c:G.cls,ch:G.ch,w:win?1:quit?-1:0,a:G.area+1,t:Math.round(G.t),lv:G.lv,k:G.kills,sk:G.skl||{},ev:Object.keys(G.awk),dl,mx:SV.maxCh,runs:(SV.st&&SV.st.runs)||0,m:matchMedia('(pointer:coarse)').matches?1:0}}
+function sendRun(win,quit){if(!colOn()||!SV.nick)return;try{navigator.sendBeacon(COL_URL,new URLSearchParams({[COL_ENTRY]:JSON.stringify(runRec(win,quit))}))}catch(_){}}
+$('#colBtn').onclick=()=>setOpt('col');$('#nickBtn').onclick=askNick;
 $('#bgmBtn').onclick=()=>setOpt('bgm');$('#sfxBtn').onclick=()=>setOpt('sfx');$('#sndBtn').onclick=()=>{audioOn();setOpt('bgm')};optUI();   // v18 배경음악 · 효과음 따로(저장), 로비 「음악」 버튼
 $('#quitBtn').onclick=()=>{$('#pause').hidden=true;end(false,true)};
 function openRev(){G.pause='rev';G.revUsed=1;const b=$('#revGem');b.innerHTML=`<img src="${icon('gemI',24)}" alt="">보석 ${REV_GEM}으로 부활`;b.disabled=SV.gems<REV_GEM;$('#revAd').textContent=mcOn()?'바로 부활(월정액)':'광고 보고 부활';$('#revOv').hidden=false}
@@ -2062,6 +2076,7 @@ function end(win,quit){
   const qN=qDoneN()-q0,aN=achReadyN()-a0;
   const psx=20+20*(G.bossK||0),ps=giveRun(rw,ch,win);lastRw=quit?null:{gold,sc:rw.sc};
   persist();
+  sendRun(win,quit);   // v20.1 플레이 기록
   setTimeout(()=>{
     $('#endT').textContent=win?'원정 성공!':quit?'원정 포기':'원정 실패';
     $('#eStats').innerHTML=statsHtml();
@@ -2107,7 +2122,7 @@ function frame(now){
   else if(TAB==='run'&&!$('#lobby').hidden)drawHeroStage(dt);
   requestAnimationFrame(frame);
 }
-renderLobby();
+renderLobby();if(!SV.nick&&!BOT&&!navigator.webdriver)askNick();   // v20.1 처음 실행 = 닉네임(자동 검사 브라우저는 건너뜀 · 검사는 askNick 직접 호출)
 artReady.then(()=>{$('#icGold').src=icon('coin',36);$('#icGem').src=icon('gemI',36);$('#nvShop').src=icon('shop',36);$('#nvGear').src=icon('gear',36);$('#nvRun').src=icon('run',36);$('#nvTal').src=icon('talent',36);$('#icEn').src=icon('energy',36);$('#icQuest').src=icon('scroll',36);$('#icAtt').src=icon('calendar',36);$('#icAch').src=icon('trophy',36);$('#bagIc').src=icon('bag',36);
   $('#imgC1').src=$('#imgC2').src=$('#imgC5').src=artURL('chest',2);$('#imgC6').src=icon('ench',64);$('#icPass').src=artURL('chestG',1);$('#imgC3').src=$('#imgC4').src=artURL('chestG',2);if(!G)renderLobby()});
 if(document.fonts)document.fonts.ready.then(()=>artReady).then(()=>{if(!G)renderLobby()});
