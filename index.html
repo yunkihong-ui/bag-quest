@@ -46,7 +46,7 @@ h1,h2,h3{font-weight:400;margin:0;text-wrap:balance}
 h1{font-family:'Jua',var(--font);font-size:40px;text-align:center;color:#f2c25a;text-shadow:0 0 14px rgba(255,120,30,.35),3px 3px 0 #6a1a08,5px 5px 0 #000;letter-spacing:.02em}
 h2{font-size:22px;color:var(--gold);text-align:center;text-shadow:2px 2px 0 #3a0c04}
 h3{font-size:15px;color:var(--dim)}
-.stage{position:relative;height:210px;padding:5px;box-sizing:border-box;overflow:hidden}
+.stage{position:relative;height:min(48vh,390px);padding:5px;box-sizing:border-box;overflow:hidden}
 .stage canvas{width:100%;height:100%}
 .clsrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .clsb{padding:6px 2px 8px;display:grid;justify-items:center;gap:2px;font-size:14px}
@@ -56,6 +56,10 @@ h3{font-size:15px;color:var(--dim)}
 .clsb[aria-pressed="true"]{box-shadow:0 0 0 3px #000,inset 0 0 0 2px var(--gold),inset 0 0 14px rgba(240,170,70,.4);background:#2c2219}
 .d0{color:#ecdfc2}.d1{color:#ffa040}.d2{color:#ff5a40}
 .clsinfo{padding:10px 12px;font-size:14px;line-height:1.6}
+h1.ttl{font-size:28px}
+.warr{position:absolute;top:56%;z-index:2;width:38px;height:54px;font-size:30px;line-height:1;color:var(--gold);background:rgba(13,10,8,.7);box-shadow:0 0 0 2px #000,inset 0 0 0 1px #7a6038}.warr.l{left:10px}.warr.r{right:10px}
+.wplate{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:2;min-width:80%;max-width:92%;padding:4px 10px;text-align:center;font-size:15px;background:rgba(13,10,8,.78);box-shadow:0 0 0 2px #000,inset 0 0 0 1px #7a6038}
+.wplate b{color:var(--gold);font-weight:400}.wplate small{display:block;font-size:10px;color:var(--dim);white-space:nowrap}.wplate i{margin-left:8px;font-style:normal;font-size:9px;letter-spacing:3px;color:var(--gold);vertical-align:2px}
 .clsinfo b{color:var(--gold);font-weight:400}
 .chsel{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:8px;text-align:center}
 .chsel .t{font-size:20px}.chsel small{display:block;font-size:12px;color:var(--dim)}
@@ -239,13 +243,11 @@ h3{font-size:15px;color:var(--dim)}
   <div id="cur"><span id="enChip"><img id="icEn" alt=""><b class="num" id="energy">20/20</b><small id="enT"></small></span><span><img id="icGold" alt=""><b class="num" id="gold">0</b></span><span><img id="icGem" alt=""><b class="num" id="gems">0</b></span><span class="ruby"><img id="icRuby" alt=""><b class="num" id="ruby">0</b></span></div>
   <div id="tabs">
     <section class="tab" id="t-run">
-      <h1>보따리 원정대</h1>
-      <div class="stage pp"><canvas id="heroCv" width="220" height="100"></canvas>
+      <h1 class="ttl">보따리 원정대</h1>
+      <div class="stage pp"><canvas id="heroCv" width="220" height="100"></canvas><button class="warr l" id="wPrev" aria-label="이전 무기">‹</button><button class="warr r" id="wNext" aria-label="다음 무기">›</button><div class="wplate" id="clsinfo"></div>
         <div class="side l"><button id="bQuest"><img id="icQuest" alt="">퀘스트<i class="dot" id="dQuest"></i></button><button id="bAtt"><img id="icAtt" alt="">출석<i class="dot" id="dAtt"></i></button><button id="bPass"><img id="icPass" alt="">패스</button></div>
         <div class="side r"><button id="bAch"><img id="icAch" alt="">업적<i class="dot" id="dAch"></i></button><button id="fsBtn" hidden><svg width="30" height="30" viewBox="0 0 10 10" shape-rendering="crispEdges" fill="currentColor" style="color:var(--gold)"><path d="M0 0h4v1H1v3H0zM6 0h4v4H9V1H6zM0 6h1v3h3v1H0zM9 6h1v4H6V9h3z"/></svg><span>전체화면</span></button><button id="sndBtn"><svg width="30" height="30" viewBox="0 0 10 10" shape-rendering="crispEdges" fill="currentColor" style="color:var(--gold)"><path d="M4 1h5v6H8V3H5v5H4zM2 7h3v2H2zM6 6h3v2H6z"/></svg><span>음악</span></button></div>
       </div>
-      <div class="clsrow" id="clsrow"></div>
-      <div class="clsinfo pp" id="clsinfo"></div>
       <div class="chsel"><button class="sbtn" id="chPrev" aria-label="이전 챕터">◀</button><div><div class="t" id="chT">챕터 1</div><small id="chD"></small></div><button class="sbtn" id="chNext" aria-label="다음 챕터">▶</button></div>
       <button class="pbtn" id="startBtn">출발</button>
       <button class="sbtn" id="tutBtn" style="align-self:center">튜토리얼 · 2분</button>
@@ -650,18 +652,15 @@ function renderLobby(){bgm('lobby');
   if(TAB==='run'&&$('#metaOv').hidden&&attReady()&&SV.st.runs&&SV.att.shown!==today()){SV.att.shown=today();persist();openAtt()}   // 다시 온 날 첫 로비: 출석 창(다른 안내 창이 떠 있으면 닫은 뒤)
 }
 function renderRun(){
-  const hc=$('#heroCv'),hw=Math.max(160,Math.floor(hc.clientWidth/2));if(hc.clientWidth&&hc.width!==hw){hc.width=hw;hc.height=100}
-  const row=$('#clsrow');row.innerHTML='';
-  for(const k in CLASSES){   // v21 무기 종류 4개: 누르면 그 종류에서 가장 좋은 무기 장착(공격 방식 · 모습 · 고유 효과 = 무기 종류)
-    const b=document.createElement('button');b.className='clsb pp';b.setAttribute('aria-pressed',k===SV.cls);const w=SV.items.filter(i=>i.k==='weapon'&&i.t===k).sort((a,c)=>c.g-a.g||c.e-a.e)[0];
-    b.insertAdjacentHTML('beforeend',`<img src="${icon(CLASSES[k].w,36)}" alt="">${CLASSES[k].wn}${w?`<small style="color:${GRADES[w.g].c}">${GRADES[w.g].n} +${w.e}</small>`:''}`);b.onclick=()=>{if(!w)return;SV.eq.weapon=w.id;SV.cls=k;persist();sfx('place');renderRun()};row.appendChild(b);
-  }
-  const C=CLASSES[SV.cls],gs=gearStats(SV.cls),wp=itemById(SV.eq.weapon);
-  $('#clsinfo').innerHTML=`<b>${C.wn}</b> · ${C.d}<br>고유 효과: ${C.pass} · 생명력 ${C.hp} · 이동 속도 ${C.spd}<br>장착: <span style="color:${wp?GRADES[wp.g].c:'#888'}">${wp?`${GRADES[wp.g].n} ${itN(wp)} +${wp.e}`:'없음'}</span> · 공격력 ${Math.round(gs.atk)} · 생명력 ${Math.round((C.hp+gs.hp)*(1+gs.hpP))}`;
+  const hc=$('#heroCv'),hw=Math.max(160,Math.floor(hc.clientWidth/2)),hh=Math.max(100,Math.floor(hc.clientHeight/2));if(hc.clientWidth&&(hc.width!==hw||hc.height!==hh)){hc.width=hw;hc.height=hh}
+  const C=CLASSES[SV.cls],gs=gearStats(SV.cls),wp=itemById(SV.eq.weapon),K=Object.keys(CLASSES);   // v21 무기 이름판: 이름 · 등급 · 고유 효과 · 4종 중 위치(●)
+  $('#clsinfo').innerHTML=`<b>${C.wn}</b>${wp?` <span style="color:${GRADES[wp.g].c}">${GRADES[wp.g].n} +${wp.e}</span>`:''}<i>${K.map(k=>k===SV.cls?'●':'○').join('')}</i><small>${C.pass} · 공격력 ${Math.round(gs.atk)} · 생명력 ${Math.round((C.hp+gs.hp)*(1+gs.hpP))}</small>`;
   const dB=Math.min(2,(SV.ch-1)/5|0),cleared=SV.best[SV.ch]&&SV.best[SV.ch].win;$('#chT').innerHTML=`챕터 ${SV.ch}${SV.ch===MAXCH?' · 최종':''} · <span class="d${dB}">${DIFF[dB]}</span>`;$('#chD').textContent=`${actOf(SV.ch).n} · 적 체력 ×${CH_HP[SV.ch-1]} · 공격 ×${CH_DM[SV.ch-1]}${cleared?' · 클리어함':` · 첫 클리어 보석 ${FIRST_GEM} · 루비 ${FIRST_RUBY}`}${SV.maxCh<6?' · 6챕터부터 2막 「얼어붙은 산맥」':SV.maxCh<11?' · 11챕터부터 3막 「불타는 지옥」':''}`;
   $('#chPrev').disabled=SV.ch<=1;$('#chNext').disabled=SV.ch>=SV.maxCh;
   const b=SV.best[SV.ch];$('#best').textContent=b?`챕터 ${SV.ch} 최고 기록 · ${b.win?'클리어 · ':b.a?`지역 ${b.a} · `:''}${fmt(b.t)} · 처치 ${n0(b.k)}`:`챕터 ${SV.ch} 기록 없음`;
 }
+const wSwap=d=>{const K=Object.keys(CLASSES);for(let i=1;i<=4;i++){const k=K[(K.indexOf(SV.cls)+d*i+16)%4],w=SV.items.filter(x=>x.k==='weapon'&&x.t===k).sort((a,c)=>c.g-a.g||c.e-a.e)[0];if(w){SV.eq.weapon=w.id;SV.cls=k;persist();sfx('place');renderRun();return}}};   // v21 화살표 = 다음 · 이전 무기 종류(그 종류에서 가장 좋은 무기 장착)
+$('#wPrev').onclick=()=>wSwap(-1);$('#wNext').onclick=()=>wSwap(1);
 /* ---------- v9 튜토리얼(2분): 직접 해 보는 연습 원정 ---------- */
 const TUT=[
   {t:'화면 아무 곳이나 <b>끌어서 이동</b>한다 · 길을 따라 앞으로 가 보자'},
@@ -1032,22 +1031,21 @@ $('#buySc').onclick=()=>{if(SV.gems<SC_GEM)return;SV.gems-=SC_GEM;const g=grant(
 for(const b of $$('#nav button'))b.onclick=()=>{TAB=b.dataset.t;renderLobby()};
 const STG=document.createElement('canvas'),EMB=[];
 function drawHeroStage(dt){
-  heroT+=dt;if(!ARTOK)return;const c=$('#heroCv'),g=c.getContext('2d'),w=c.width,h=c.height,m=w/2|0;g.imageSmoothingEnabled=false;
+  heroT+=dt;if(!ARTOK)return;const c=$('#heroCv'),g=c.getContext('2d'),w=c.width,h=c.height,m=w/2|0,oy=h-128;g.imageSmoothingEnabled=false;   // v21 큰 무대: 캠프는 뒤쪽(oy만큼 아래) · 주인공 2배 앞 가운데
   g.fillStyle=g._p||(g._p=g.createPattern(TILE.grass,'repeat'));g.fillRect(0,0,w,h);
-  const fx=m-16,fy=96;
-  g.fillStyle=g._d||(g._d=g.createPattern(TILE.dirt,'repeat'));g.beginPath();g.ellipse(fx+12,90,64,17,0,0,TAU);g.fill();
-  const list=[['camp_pine',m-96,74],['camp_pine',m+98,78,1],['camp_tent',m-50,56],['camp_wagon',m+48,58,1],['camp_banner',m+2,50],['camp_rack',m-86,90],['camp_crates',m+88,98,1],
-    ['camp_torch',m-58,82],['camp_torch',m+34,76],['camp_bench',fx,78],[(heroT*8|0)%2?'camp_fire2':'camp_fire1',fx,fy],[SV.cls,m+20,98,1,(heroT*3|0)%2?'st':'n']];
+  g.fillStyle=g._d||(g._d=g.createPattern(TILE.dirt,'repeat'));g.beginPath();g.ellipse(m,96+oy,104,30,0,0,TAU);g.fill();
+  const list=[['camp_pine',m-106,62+oy],['camp_pine',m+108,64+oy,1],['camp_pine',m-38,28+oy],['camp_pine',m+44,24+oy,1],['camp_tent',m-64,50+oy],['camp_wagon',m+66,52+oy,1],['camp_rack',m-98,82+oy],['camp_crates',m+98,88+oy,1],
+    ['camp_torch',m-82,74+oy],['camp_torch',m+52,70+oy]];
   list.sort((a,b)=>a[2]-b[2]);for(const[n,x,y,f,k]of list)drawA(g,n,x,y,!!f,k||'n');
   g.globalCompositeOperation='multiply';g.fillStyle='rgb(120,124,170)';g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';
   if(STG.width!==w||STG.height!==h){STG.width=w;STG.height=h}
   const d=STG.getContext('2d'),fr=60+Math.sin(heroT*9)*3+Math.sin(heroT*23)*2;
-  d.globalCompositeOperation='source-over';d.clearRect(0,0,w,h);d.fillStyle='rgba(6,5,12,.7)';d.fillRect(0,0,w,h);d.globalCompositeOperation='destination-out';
+  d.globalCompositeOperation='source-over';d.clearRect(0,0,w,h);d.fillStyle='rgba(6,5,12,.8)';d.fillRect(0,0,w,h);d.globalCompositeOperation='destination-out';
   const L=(x,y,r,a)=>{const gr=d.createRadialGradient(x,y,r*.25,x,y,r);gr.addColorStop(0,`rgba(0,0,0,${a})`);gr.addColorStop(1,'rgba(0,0,0,0)');d.fillStyle=gr;d.fillRect(x-r,y-r,r*2,r*2)};
-  L(fx,fy-14,fr,1);L(m-58,40,20+Math.sin(heroT*11),.85);L(m+34,34,20+Math.sin(heroT*13+1),.85);
+  L(m-82,32+oy,20+Math.sin(heroT*11),.85);L(m+52,28+oy,20+Math.sin(heroT*13+1),.85);L(m,h-78,84,.85);
   g.drawImage(STG,0,0);
-  g.globalCompositeOperation='lighter';const wg=g.createRadialGradient(fx,fy-12,2,fx,fy-12,fr*.75);wg.addColorStop(0,'rgba(255,130,40,.32)');wg.addColorStop(1,'rgba(255,130,40,0)');g.fillStyle=wg;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';
-  if(Math.random()<dt*14)EMB.push({x:fx+R(-6,6),y:fy-16,vx:R(-6,6),vy:R(-28,-14),t:0,life:R(.8,1.6)});
+  {const hx=m,hy=h-30,bg=g.createRadialGradient(hx,hy-50,4,hx,hy-50,72);bg.addColorStop(0,'rgba(255,205,130,.38)');bg.addColorStop(1,'rgba(255,205,130,0)');g.globalCompositeOperation='lighter';g.fillStyle=bg;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';
+   g.fillStyle='rgba(0,0,0,.5)';g.beginPath();g.ellipse(hx,hy-1,22,5,0,0,TAU);g.fill();drawA(g,SV.cls,hx,hy,0,(heroT*3|0)%2?'st':'n',2)}   // v21 주인공 강조: 밤 색조 · 어둠 뒤에 밝게 그림(2배 · 가운데) · 뒤 빛무리 · 발밑 그림자
   for(const e of EMB){e.t+=dt;e.x+=e.vx*dt+Math.sin(e.t*6)*.2;e.y+=e.vy*dt}
   for(let i=EMB.length-1;i>=0;i--)if(EMB[i].t>EMB[i].life)EMB.splice(i,1);
   for(const e of EMB){g.globalAlpha=1-e.t/e.life;g.fillStyle=e.t<.4?'#ffe08a':'#ff7a2a';g.fillRect(e.x|0,e.y|0,1,1)}g.globalAlpha=1;
