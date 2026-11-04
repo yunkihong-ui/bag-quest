@@ -1629,14 +1629,16 @@ function drawA(c,name,x,yb,flip,kind,sc=1){const v=variant(name,kind),w=v.width*
 function drawRot(name,x,y,a){const v=variant(name);cx.save();cx.translate(Math.round(x),Math.round(y));if(a)cx.rotate(a);cx.drawImage(v,-(v.width>>1),-(v.height>>1));cx.restore()}
 function artURL(name,s){const v=variant(name),c=document.createElement('canvas');c.width=v.width*s;c.height=v.height*s;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(v,0,0,c.width,c.height);return c.toDataURL()}
 // 바닥: 한 판에 한 번 그려 두고 매 프레임 보이는 부분만 복사
+let CF=null,GRD=null;   // v20.2 큰 그림판(2370², 약 22MB)은 임시 · 바닥 한 장씩만 만들어 계속 다시 씀 — 지역마다 새로 만들면 휴대폰에서 메모리가 몰려 그림판이 GPU에서 밀려나고 그 뒤로 계속 느려짐(11/4 1-2 느려짐 제보)
 function crispFill(draw,fill){
-  const S=AW+GM*2,t=document.createElement('canvas');t.width=t.height=S;const g=t.getContext('2d');
+  const S=AW+GM*2;if(!CF){CF=document.createElement('canvas');CF.width=CF.height=S}const t=CF,g=t.getContext('2d',{willReadFrequently:true});   // 픽셀을 읽는 임시 그림판 = 처음부터 CPU 쪽(GPU 되읽기 없음)
+  g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';g.clearRect(0,0,S,S);
   g.translate(GM,GM);g.fillStyle=g.strokeStyle='#fff';draw(g);
   const id=g.getImageData(0,0,S,S),d=id.data;for(let i=3;i<d.length;i+=4)d[i]=d[i]>127?255:0;g.putImageData(id,0,0);
   g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-in';g.fillStyle=typeof fill==='function'?fill(g):fill;g.fillRect(0,0,S,S);return t;
 }
 function buildGround(map){
-  const S=AW+GM*2,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+  const S=AW+GM*2;if(!GRD){GRD=document.createElement('canvas');GRD.width=GRD.height=S}const c=GRD,g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';g.imageSmoothingEnabled=false;   // v20.2 같은 그림판에 다시 그림(아래 배경 칠이 불투명 색으로 전부 덮음)
   const A=AREAS[G.area];g.fillStyle=A.bg||'#142010';g.fillRect(0,0,S,S);
   const pa=map.path,stroke=(k,add)=>gg=>{gg.lineCap='round';for(const[x1,y1,x2,y2,r1,r2]of pa.sg){gg.lineWidth=(r1+r2)*k+add;gg.beginPath();gg.moveTo(x1,y1);gg.lineTo(x2,y2);gg.stroke()}};
   g.drawImage(crispFill(stroke(1,22),A.edge||'#0b1308'),0,0);
@@ -2045,7 +2047,7 @@ function openPause(){if(!G||G.pause)return;G.pause='pause';$('#pStats').innerHTM
 function closePause(){$('#pause').hidden=true;resume()}
 $('#pauseBtn').onclick=openPause;$('#resumeBtn').onclick=closePause;
 // v20.1 닉네임 · 플레이 기록: 판이 끝날 때 개인 구글 설문지(formResponse)로 한 줄(JSON) — 공개 주소에서 동작(아티팩트는 외부 전송이 막혀 조용히 실패) · 일시정지 메뉴에서 끄기
-const VER='v20.1',COL_URL='',COL_ENTRY='';   // 설문지 주소 · 「기록」 질문 entry 번호(비어 있으면 보내지 않음)
+const VER='v20.2',COL_URL='',COL_ENTRY='';   // 설문지 주소 · 「기록」 질문 entry 번호(비어 있으면 보내지 않음)
 const colOn=()=>!!COL_URL&&!!COL_ENTRY&&OPT().col!==0&&!BOT;
 function askNick(){$('#nickIn').value=SV.nick||'';$('#nickOv').hidden=false;setTimeout(()=>$('#nickIn').focus(),50)}
 function setNick(){const v=$('#nickIn').value.trim().slice(0,10);if(v.length<2){$('#nickIn').focus();toast('닉네임은 2자 이상');return}SV.nick=v;if(!SV.did)SV.did=Math.random().toString(36).slice(2,10);persist();$('#nickOv').hidden=true;if(!G)renderLobby()}
