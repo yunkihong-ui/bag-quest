@@ -51,6 +51,7 @@ h3{font-size:15px;color:var(--dim)}
 .clsrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .clsb{padding:6px 2px 8px;display:grid;justify-items:center;gap:2px;font-size:14px}
 .clsb canvas{width:52px;height:52px}
+.clsb img{width:44px;height:44px;image-rendering:pixelated}
 .clsb small{display:block;font-size:11px;line-height:1.2}
 .clsb[aria-pressed="true"]{box-shadow:0 0 0 3px #000,inset 0 0 0 2px var(--gold),inset 0 0 14px rgba(240,170,70,.4);background:#2c2219}
 .d0{color:#ecdfc2}.d1{color:#ffa040}.d2{color:#ff5a40}
@@ -653,8 +654,7 @@ function renderRun(){
   const row=$('#clsrow');row.innerHTML='';
   for(const k in CLASSES){   // v21 무기 종류 4개: 누르면 그 종류에서 가장 좋은 무기 장착(공격 방식 · 모습 · 고유 효과 = 무기 종류)
     const b=document.createElement('button');b.className='clsb pp';b.setAttribute('aria-pressed',k===SV.cls);const w=SV.items.filter(i=>i.k==='weapon'&&i.t===k).sort((a,c)=>c.g-a.g||c.e-a.e)[0];
-    const c=document.createElement('canvas');c.width=c.height=52;if(ARTOK){const g=c.getContext('2d');g.imageSmoothingEnabled=false;drawA(g,k,26,51)}
-    b.appendChild(c);b.insertAdjacentHTML('beforeend',`${CLASSES[k].wn}${w?`<small style="color:${GRADES[w.g].c}">${GRADES[w.g].n} +${w.e}</small>`:''}`);b.onclick=()=>{if(!w)return;SV.eq.weapon=w.id;SV.cls=k;persist();sfx('place');renderRun()};row.appendChild(b);
+    b.insertAdjacentHTML('beforeend',`<img src="${icon(CLASSES[k].w,36)}" alt="">${CLASSES[k].wn}${w?`<small style="color:${GRADES[w.g].c}">${GRADES[w.g].n} +${w.e}</small>`:''}`);b.onclick=()=>{if(!w)return;SV.eq.weapon=w.id;SV.cls=k;persist();sfx('place');renderRun()};row.appendChild(b);
   }
   const C=CLASSES[SV.cls],gs=gearStats(SV.cls),wp=itemById(SV.eq.weapon);
   $('#clsinfo').innerHTML=`<b>${C.wn}</b> · ${C.d}<br>고유 효과: ${C.pass} · 생명력 ${C.hp} · 이동 속도 ${C.spd}<br>장착: <span style="color:${wp?GRADES[wp.g].c:'#888'}">${wp?`${GRADES[wp.g].n} ${itN(wp)} +${wp.e}`:'없음'}</span> · 공격력 ${Math.round(gs.atk)} · 생명력 ${Math.round((C.hp+gs.hp)*(1+gs.hpP))}`;
